@@ -1,18 +1,18 @@
 # Round 1 Questions
 
-## 練習 1：基本 function
+## Exercise 1: Basic function
 
-寫 `fn f_to_c(f: f64) -> f64`，將華氏轉攝氏，喺 `main` 印出 `f_to_c(98.6)`。
+Write `fn f_to_c(f: f64) -> f64` that converts Fahrenheit to Celsius. Print `f_to_c(98.6)` in `main`.
 
-提示：最後一行唔加分號就係 return value，好似 Ruby 嘅隱式 return。
+Hint: the last line without a semicolon is the return value, like Ruby's implicit return.
 
-## 練習 2：Option
+## Exercise 2: Option
 
-寫 `fn first_even(nums: &[i32]) -> Option<i32>`，搵出第一個雙數。喺 `main` 用 `match` 處理 `Some` 同 `None`。
+Write `fn first_even(nums: &[i32]) -> Option<i32>` that finds the first even number. In `main`, handle `Some` and `None` with `match`.
 
-提示：可以用 `for n in nums`，或者 `nums.iter().find(...)`。
+Hint: you can use `for n in nums`, or `nums.iter().find(...)`.
 
-## 練習 3：Ownership（修 compile error）
+## Exercise 3: Ownership (fix the compile error)
 
 ```rust
 fn main() {
@@ -26,11 +26,11 @@ fn greet(n: String) {
 }
 ```
 
-用兩種方法修好：(a) 用 `&` 借用，(b) 用 `.clone()`。再諗下邊種好啲，點解。
+Fix it in two ways: (a) borrow with `&`, (b) use `.clone()`. Then think about which one is better and why.
 
-## 練習 4：enum + match
+## Exercise 4: enum + match
 
-定義：
+Define:
 
 ```rust
 enum Shape {
@@ -39,11 +39,11 @@ enum Shape {
 }
 ```
 
-寫 `fn area(s: &Shape) -> f64`。之後試吓喺 enum 加個 `Triangle`，睇編譯器點提你。
+Write `fn area(s: &Shape) -> f64`. Then try adding a `Triangle` variant to the enum and see how the compiler reminds you.
 
-## 練習 5：Result 同 `?`
+## Exercise 5: Result and `?`
 
-寫 `fn parse_age(s: &str) -> Result<u32, std::num::ParseIntError>`，用 `s.parse::<u32>()` 同 `?`。喺 `main` 試 `"25"` 同 `"abc"`。
+Write `fn parse_age(s: &str) -> Result<u32, std::num::ParseIntError>` using `s.parse::<u32>()` and `?`. Try `"25"` and `"abc"` in `main`.
 
 ---
 
@@ -54,60 +54,60 @@ Each file has its own `main` and prints visible output.
 
 ## practice6: `struct` + `impl`
 
-Struct 好似 TS 嘅 `interface` 加 class 嘅 method 合體，但 data 同 behavior 分開寫：`struct` 放 field，`impl` 放 method。
+A struct is like a TS `interface` and a class's methods combined, except data and behavior are written separately: `struct` holds the fields, `impl` holds the methods.
 
-- 定義 `struct Rectangle { width: f64, height: f64 }`
-- `impl` 入面寫：
-  - `fn new(width: f64, height: f64) -> Rectangle`，呢個係 associated function，好似 Rails 嘅 `self.build`，冇 `self` 參數
+- Define `struct Rectangle { width: f64, height: f64 }`
+- In `impl`, write:
+  - `fn new(width: f64, height: f64) -> Rectangle`: an associated function, like Rails' `self.build`, with no `self` parameter
   - `fn area(&self) -> f64`
-  - `fn scale(&mut self, factor: f64)`，會改自己
-- `main` 入面 new 一個，print area，scale 之後再 print 一次
+  - `fn scale(&mut self, factor: f64)`: mutates itself
+- In `main`, create one, print its area, scale it, then print the area again
 
-**要諗**：點解 `area` 用 `&self`，`scale` 用 `&mut self`？個 `let` 要加 `mut` 先得，點解？
+**Think about**: why does `area` take `&self` while `scale` takes `&mut self`? Why does the `let` need `mut`?
 
 ## practice7: `trait`
 
-Trait 即係 TS 嘅 `interface`，但可以幫自己嘅 type 加實作。
+A trait is like a TS `interface`, but you can also add implementations to your own types.
 
-- 定義 `trait Describe { fn describe(&self) -> String; }`
-- 幫 practice6 嘅 `Rectangle` 同一個新 struct `Circle { radius: f64 }` 都 `impl Describe`
-- 寫一個 `fn print_it(item: &impl Describe)`，用兩種 type 都叫一次
+- Define `trait Describe { fn describe(&self) -> String; }`
+- Implement `Describe` for practice6's `Rectangle` and for a new struct `Circle { radius: f64 }`
+- Write `fn print_it(item: &impl Describe)` and call it with both types
 
-**要諗**：如果想擺 Rectangle 同 Circle 入同一個 `Vec`，`impl Describe` 夠唔夠？（你會撞到牆，睇下個 error 講乜。呢個問題留到 round 3 先解，今次撞完記低個 error 就夠。）
+**Think about**: if you want to put a Rectangle and a Circle in the same `Vec`, is `impl Describe` enough? (You will hit a wall. Read what the error says. The fix is for round 3, so this time just note the error down.)
 
-## practice8: Iterators 基礎
+## practice8: Iterator basics
 
-Iterator 即係 JS 嘅 `.map().filter()` chain，但係 lazy，要 `collect()` 先真正行。
+An iterator is like a JS `.map().filter()` chain, but lazy: nothing runs until you `collect()`.
 
-用 `let nums = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];`：
+Use `let nums = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];`:
 
-1. 揀出偶數，平方，`collect` 做 `Vec<i32>`
-2. 用 `.sum::<i32>()` 計總和
-3. 用 `.iter().any(...)` 同 `.all(...)` 各試一次
+1. Pick the even numbers, square them, and `collect` into a `Vec<i32>`
+2. Use `.sum::<i32>()` to get the total
+3. Try `.iter().any(...)` and `.all(...)` once each
 
-**要諗**：`.iter()`、`.into_iter()`、`.iter_mut()` 有咩分別？同 ownership 有咩關係？
+**Think about**: what is the difference between `.iter()`, `.into_iter()` and `.iter_mut()`? How does each relate to ownership?
 
-## practice9: Struct + Iterator 夾埋用
+## practice9: Struct + iterator together
 
-- 定義 `struct Student { name: String, score: u32 }`
-- 整一個 `Vec<Student>`（最少 4 個）
-- 用 iterator 做：
-  1. 揀出 score >= 60 嘅人，`collect` 成 `Vec<String>` 嘅名
-  2. 計平均分（記得 `f64` 轉換）
-  3. 搵最高分嗰個（提示：`max_by_key`，個結果係 `Option`，你識處理）
+- Define `struct Student { name: String, score: u32 }`
+- Build a `Vec<Student>` (at least 4 students)
+- Use iterators to:
+  1. Pick students with score >= 60 and `collect` their names into a `Vec<String>`
+  2. Compute the average score (remember the `f64` conversion)
+  3. Find the student with the highest score (hint: `max_by_key`, whose result is an `Option` that you already know how to handle)
 
-## practice10: 迷你 CLI 項目（熱身）
+## practice10: Mini CLI project (warm-up)
 
-寫個 todo list 喺記憶體度（暫時唔使存檔）：
+Write an in-memory todo list (no saving to disk yet):
 
 - `struct Todo { id: u32, title: String, done: bool }`
-- `struct TodoList { items: Vec<Todo> }`，有 `add`、`complete(id) -> Result<(), String>`、`list`
-- `main` 入面行一串操作：add 三個、complete 一個、complete 一個唔存在嘅 id（要見到 Err 被處理）、最後 print 晒
+- `struct TodoList { items: Vec<Todo> }` with `add`, `complete(id) -> Result<(), String>` and `list`
+- In `main`, run a series of operations: add three items, complete one, complete an id that does not exist (the `Err` must be handled), and finally print everything
 
-**重點**：`complete` 要用 `iter_mut().find(...)` 加 `ok_or(...)?` 或者 `match`，將 round 1 嘅 `Option`/`Result` 同今輪嘅嘢串埋。
+**Key point**: `complete` should use `iter_mut().find(...)` with `ok_or(...)?` or a `match`, tying round 1's `Option`/`Result` together with this round's material.
 
 ## Reminders
 
-- 卡住就 `.clone()`，唔好為咗靚而浪費時間。
-- Compiler error 先自己睇晒，睇唔明先貼嚟，我逐行拆。
-- 做完一個就 save 低叫我 review，唔使等晒五個。
+- When stuck, just `.clone()`. Do not waste time making it pretty.
+- Read the whole compiler error first. If it still does not make sense, paste it and we will go through it line by line.
+- Save each exercise as you finish it and ask for a review. No need to wait for all five.
