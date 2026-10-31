@@ -19,7 +19,7 @@ fn main() {
 
     println!("All positive: {}", all_positive);
 
-    // .iter() 只讀取資料，不修改資料
-    // .iter_mut() 可讀取和修改資料
-    // .into_iter() 取得所有權
+    // .iter() only read data, not modify
+    // .iter_mut() read and modify data
+    // .into_iter() take the ownership
 }

@@ -22,7 +22,7 @@ Questions for both rounds are in `QUESTIONS.md`.
 | #   | Topic                                  | File            | Status | Notes                                                                                   |
 | --- | -------------------------------------- | --------------- | ------ | --------------------------------------------------------------------------------------- |
 | 6   | `struct` + `impl` (`Rectangle`)        | `practice6.rs`  | Done   | `new` (associated fn), `&self` vs `&mut self`                                           |
-| 7   | `trait` (`Describe`)                   | `practice7.rs`  | Done   | `&impl Describe`. Hit `vec![rect, circle]` error on purpose (trait objects come later)  |
+| 7   | `trait` (`Describe`)                   | `practice7.rs`  | Done   | `&impl Describe`. Hit `vec![rect, circle]` error, then solved with `Vec<Box<dyn Describe>>` |
 | 8   | Iterators (`filter`/`map`/`collect`)   | `practice8.rs`  | Done   | `sum`, `any`, `all`. Explained `iter` / `iter_mut` / `into_iter`                        |
 | 9   | `struct` + iterators (`Student`)       | `practice9.rs`  | Done   | `max_by_key` returns `Option`, average with `as f64`. Used an array instead of `Vec`    |
 | 10  | Mini todo list (`TodoList`)            | `practice10.rs` | Done   | `iter_mut().find` + `match` returning `Result`. `add` generates the id itself           |
@@ -41,14 +41,12 @@ Questions for both rounds are in `QUESTIONS.md`.
 
 ## Known loose ends
 
-- `practice3.rs`: the `.clone()` variant is only a comment. Worth running it once to see it work.
-- Trait objects (`Vec<Box<dyn Trait>>`): only seen the error so far, not solved.
 - `practice10.rs` still uses `match` for `complete`. Try rewriting with `ok_or(...)?` to practice `?`.
 - Only `Todo` in memory, no persistence and no real CLI input yet.
 
 ## Next: Round 3 (not started)
 
-- Trait objects (`dyn Trait`, `Box`) and supertraits
+- Supertraits (`trait Shape: Describe`) and when to pick `impl Trait` vs `dyn Trait`
 - Turn the todo list into a real CLI (read args, save to a file)
 - Custom error types
 - Modules and `cargo test`

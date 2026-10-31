@@ -44,6 +44,12 @@ fn main() {
 
     print_it(&rect);
     print_it(&circle);
+
+    let list: Vec<Box<dyn Describe>> = vec![Box::new(rect), Box::new(circle)];
+
+    for item in list.iter() {
+        println!("{}", item.describe());
+    }
 }
 
 fn print_it(item: &impl Describe) {
