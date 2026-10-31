@@ -23,14 +23,13 @@ impl TodoList {
     }
 
     fn complete(&mut self, id: u32) -> Result<(), String> {
-        let item = self.items.iter_mut().find(|x| x.id == id);
-        match item {
-            Some(x) => {
-                x.done = true;
-                Ok(())
-            }
-            None => Err("Cannot find the item".to_string()),
-        }
+        let item = self
+            .items
+            .iter_mut()
+            .find(|x| x.id == id)
+            .ok_or("Cannot find the item".to_string())?;
+        item.done = true;
+        Ok(())
     }
 
     fn list(&self) {

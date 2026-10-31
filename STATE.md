@@ -25,7 +25,7 @@ Questions for both rounds are in `QUESTIONS.md`.
 | 7   | `trait` (`Describe`)                   | `practice7.rs`  | Done   | `&impl Describe`. Hit `vec![rect, circle]` error, then solved with `Vec<Box<dyn Describe>>` |
 | 8   | Iterators (`filter`/`map`/`collect`)   | `practice8.rs`  | Done   | `sum`, `any`, `all`. Explained `iter` / `iter_mut` / `into_iter`                        |
 | 9   | `struct` + iterators (`Student`)       | `practice9.rs`  | Done   | `max_by_key` returns `Option`, average with `as f64`. Used an array instead of `Vec`    |
-| 10  | Mini todo list (`TodoList`)            | `practice10.rs` | Done   | `iter_mut().find` + `match` returning `Result`. `add` generates the id itself           |
+| 10  | Mini todo list (`TodoList`)            | `practice10.rs` | Done   | `iter_mut().find(...).ok_or(...)?` returning `Result`. `add` generates the id itself    |
 
 ## Concepts covered
 
@@ -41,7 +41,6 @@ Questions for both rounds are in `QUESTIONS.md`.
 
 ## Known loose ends
 
-- `practice10.rs` still uses `match` for `complete`. Try rewriting with `ok_or(...)?` to practice `?`.
 - Only `Todo` in memory, no persistence and no real CLI input yet.
 
 ## Next: Round 3 (not started)
