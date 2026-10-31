@@ -111,3 +111,108 @@ Write an in-memory todo list (no saving to disk yet):
 - When stuck, just `.clone()`. Do not waste time making it pretty.
 - Read the whole compiler error first. If it still does not make sense, paste it and we will go through it line by line.
 - Save each exercise as you finish it and ask for a review. No need to wait for all five.
+
+---
+
+# Round 3 Questions
+
+Theme: finish traits properly, then move from toy code to a real, tested, multi-file-style CLI.
+Same rules as before: one file per exercise in `src/bin/practiceN.rs`, each with its own `main` that prints visible output.
+
+Checklist before asking for review (earlier rounds lost time on these):
+
+- Re-read the exercise and tick every bullet, including the "Think about" questions.
+- Run it once with the happy path and once with the failure path.
+- Read all compiler warnings, not only errors.
+
+## practice11: Supertraits and `impl` vs `dyn`
+
+In round 2 you made `Describe` work with `Box<dyn Describe>`. Now make shapes properly.
+
+- Define `trait Shape: Describe { fn area(&self) -> f64; }`. The `: Describe` part is a supertrait, like TS `interface Shape extends Describe`.
+- Implement `Describe` and `Shape` for `Rectangle` and `Circle`.
+- Write `fn total_area(shapes: &[Box<dyn Shape>]) -> f64` using an iterator (`map` + `sum`).
+- In `main`, build a `Vec<Box<dyn Shape>>` with at least 3 shapes, print each `describe()` (which comes from the supertrait!) and the total area.
+- Write a second function `fn print_area(shape: &impl Shape)` and call it with one concrete shape.
+
+**Think about**: why can you call `describe()` on a `Box<dyn Shape>`? When would you pick `impl Shape` over `dyn Shape`? Write your answer as a comment at the bottom of the file.
+
+## practice12: Custom error types
+
+`Result<(), String>` works, but callers cannot tell errors apart. Use a real error type, like a Ruby exception class hierarchy.
+
+- Define `enum TodoError { NotFound(u32), EmptyTitle }`.
+- Implement `std::fmt::Display` for it (`fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result`, use `write!`).
+- Copy `TodoList` from practice10 and change it:
+  - `add(&mut self, title: String) -> Result<u32, TodoError>`: reject an empty or whitespace-only title (use `trim()`), otherwise return the new id.
+  - `complete(&mut self, id: u32) -> Result<(), TodoError>`: use `ok_or(TodoError::NotFound(id))?`.
+- In `main`, trigger both errors. Use `match` on the error to print a different message per variant, then print the other one with `{}` through `Display`.
+
+**Think about**: what does the caller gain compared to a `String` error? (Hint: `match` is exhaustive. Add a third variant and see what the compiler tells you.)
+
+## practice13: The `From` trait and `?` conversion
+
+`?` converts errors automatically if a `From` impl exists. You saw this when `&str` became `String`. Now write your own.
+
+- Define `enum AppError { Parse(std::num::ParseIntError), Todo(TodoError) }` (copy `TodoError` and its `Display` from practice12).
+- Implement `From<std::num::ParseIntError> for AppError` and `From<TodoError> for AppError`.
+- Write `fn complete_by_text(list: &mut TodoList, input: &str) -> Result<(), AppError>`:
+  - parse `input` into a `u32` with `?`
+  - call `list.complete(id)` with `?`
+  - no `map_err` allowed, the `?` must convert for you
+- In `main`, call it with a valid id (`"1"`), a non-number (`"abc"`) and a missing id (`"99"`), printing the result each time.
+
+**Think about**: which line does the `?` conversion happen on, and which trait makes it work?
+
+## practice14: Modules and `cargo test`
+
+- Put your practice12 types inside an inline module: `mod todo { pub struct Todo ... pub struct TodoList ... pub enum TodoError ... }`. Mark only what `main` needs as `pub` (including fields or methods it touches).
+- In `main`, bring things in with `use todo::{TodoList, TodoError};`.
+- Add a test module at the bottom:
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::todo::*;
+
+    #[test]
+    fn add_rejects_empty_title() { /* ... */ }
+}
+```
+
+- Write at least 4 tests: empty title rejected, ids increase, `complete` marks the item done, `complete` on a missing id returns `NotFound`.
+- Run with `cargo test --bin practice14`.
+
+**Think about**: what happens if you remove `pub` from one method? Read the privacy error. What does `use super::...` mean inside `mod tests`?
+
+## practice15: Todo CLI with file persistence (mini project)
+
+Turn the todo list into a real command-line tool. Keep it in one file, `src/bin/practice15.rs`, using what you built in practice12 to practice14.
+
+Commands (read from `std::env::args()`):
+
+```text
+cargo run --bin practice15 -- add "buy milk"
+cargo run --bin practice15 -- list
+cargo run --bin practice15 -- done 1
+```
+
+Requirements:
+
+- Storage is a plain text file `todos.txt` in the current directory, one todo per line, like `1|false|buy milk`. No `serde` yet, parse by hand with `split('|')`.
+- `load() -> Result<TodoList, AppError>`: if the file does not exist, return an empty list (not an error). Parse each line with `?`.
+- `save(&TodoList) -> Result<(), AppError>`.
+- Add `Io(std::io::Error)` to `AppError` with a `From` impl so `std::fs::read_to_string` and `std::fs::write` work with `?`.
+- `main` calls `run() -> Result<(), AppError>`, and prints the error with `{}` and exits with code 1 if it fails (`std::process::exit(1)`).
+- Unknown or missing command prints a short usage message.
+- Add `todos.txt` to `.gitignore`.
+
+Stuck points to expect: `args().collect::<Vec<String>>()`, matching on a slice (`match args.as_slice() { [_, cmd, rest @ ..] => ... }`), and `.lines()` on a `String`. Ask for hints on any of them.
+
+**Think about**: what happens to your data if the process crashes halfway through `save`? You do not need to fix it, just note it.
+
+## Reminders
+
+- No lifetimes or `async` yet. If the compiler asks for a lifetime, switch the parameter to `String` or `.clone()`.
+- Do one exercise at a time and ask for review after each. Hints are fine, just ask.
+- `cargo fmt` before asking for review. Do not run `cargo clippy` unless you want it.

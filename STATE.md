@@ -43,11 +43,16 @@ Questions for both rounds are in `QUESTIONS.md`.
 
 - Only `Todo` in memory, no persistence and no real CLI input yet.
 
-## Next: Round 3 (not started)
+## Round 3: Traits, errors, modules, tests, CLI (in progress)
 
-- Supertraits (`trait Shape: Describe`) and when to pick `impl Trait` vs `dyn Trait`
-- Turn the todo list into a real CLI (read args, save to a file)
-- Custom error types
-- Modules and `cargo test`
+Questions are in `QUESTIONS.md`. Planned exercises:
+
+- `practice11`: supertraits (`trait Shape: Describe`), `Vec<Box<dyn Shape>>`, `impl` vs `dyn`
+- `practice12`: custom error enum, `Display`, `ok_or(TodoError::NotFound(id))?`
+- `practice13`: `From` impls so `?` converts errors (`ParseIntError` and `TodoError` into `AppError`)
+- `practice14`: inline `mod` with `pub`, `use`, and `cargo test --bin practice14`
+- `practice15`: todo CLI with `std::env::args`, file persistence in `todos.txt`, `Io` error variant
+
+Watch points from earlier rounds: finish every bullet of an exercise before review (skipped `list`, `any`/`all`, `collect` before), and give `ok_or` the error itself, not `Err(...)`.
 
 Reminders: avoid lifetimes and `async` for now, and `.clone()` freely when stuck.
