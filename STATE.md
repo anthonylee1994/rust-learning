@@ -51,7 +51,7 @@ Questions are in `QUESTIONS.md`.
 | --- | ---------------------------- | --------------- | ------ | ----------------------------------------------------------------------------------------- |
 | 11  | Supertraits, `impl` vs `dyn` | `practice11.rs` | Done   | `trait Shape: Describe`, `Vec<Box<dyn Shape>>`, `map` + `sum`, good `think about` answers |
 | 12  | Custom error types           | `practice12.rs` | Done   | `TodoError` + `Display`, `ok_or(...)?`, `main` triggers both error paths                  |
-| 13  | `From` and `?` conversion    | `practice13.rs` | Todo   | `ParseIntError` + `TodoError` into `AppError`                                             |
+| 13  | `From` and `?` conversion    | `practice13.rs` | Done   | `?` converts via `From`; `main` matches `AppError::Parse` and `AppError::Todo` separately |
 | 14  | Modules and `cargo test`     | `practice14.rs` | Todo   | inline `mod` with `pub`, 4 tests                                                          |
 | 15  | Todo CLI + file persistence  | `practice15.rs` | Todo   | `std::env::args`, `todos.txt`, `Io` error variant                                         |
 
