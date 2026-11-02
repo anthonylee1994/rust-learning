@@ -1,7 +1,7 @@
 # Rust Learning Progress
 
 Background: TypeScript + Ruby on Rails developer learning Rust.
-Last updated: 2026-10-31 (Round 2 done)
+Last updated: 2026-11-02 (Round 3 done)
 
 ## Round 1: Basics (completed)
 
@@ -38,23 +38,34 @@ Questions for both rounds are in `QUESTIONS.md`.
 - `trait` and `&impl Trait` parameters
 - Iterator chains: `filter`, `map`, `collect`, `sum`, `any`, `all`, `max_by_key`
 - `iter()` vs `iter_mut()` vs `into_iter()` and how they relate to ownership
+- Supertraits, `Box<dyn Trait>`
+- Custom error enums, `Display`, `From` and `?` conversion
+- Inline `mod` and `pub`, `#[cfg(test)]`, `#[test]`, `assert!` / `matches!`
+- `std::fs` (`read_to_string`, `File::create`), `io::ErrorKind`, `io::Write` must be in scope
+- `std::env::args`, slice patterns (`[_, cmd, rest @ ..]`) with match guards
+- `match` arms must all return the same type (use `;` in a block to get `()`)
 
 ## Known loose ends
 
-- Only `Todo` in memory, no persistence and no real CLI input yet.
+- `save` uses `File::create`, so a crash halfway leaves a truncated `todos.txt` (fix idea: write a temp file, then `rename`).
+- `add` makes the id from `len() + 1`, which would clash if delete is ever added.
+- Todo code is copied between practice files; a shared `src/lib.rs` would remove the duplication.
+- Think-about answers for practice14 (`pub` privacy error, `use super::...`) are still not answered.
 
-## Round 3: Traits, errors, modules, tests, CLI (in progress)
+## Round 3: Traits, errors, modules, tests, CLI (completed)
 
 Questions are in `QUESTIONS.md`.
 
-| #   | Topic                        | File            | Status | Notes                                                                                     |
-| --- | ---------------------------- | --------------- | ------ | ----------------------------------------------------------------------------------------- |
-| 11  | Supertraits, `impl` vs `dyn` | `practice11.rs` | Done   | `trait Shape: Describe`, `Vec<Box<dyn Shape>>`, `map` + `sum`, good `think about` answers |
-| 12  | Custom error types           | `practice12.rs` | Done   | `TodoError` + `Display`, `ok_or(...)?`, `main` triggers both error paths                  |
-| 13  | `From` and `?` conversion    | `practice13.rs` | Done   | `?` converts via `From`; `main` matches `AppError::Parse` and `AppError::Todo` separately |
-| 14  | Modules and `cargo test`     | `practice14.rs` | Todo   | inline `mod` with `pub`, 4 tests                                                          |
-| 15  | Todo CLI + file persistence  | `practice15.rs` | Todo   | `std::env::args`, `todos.txt`, `Io` error variant                                         |
+| #   | Topic                        | File            | Status | Notes                                                                                                         |
+| --- | ---------------------------- | --------------- | ------ | ------------------------------------------------------------------------------------------------------------- |
+| 11  | Supertraits, `impl` vs `dyn` | `practice11.rs` | Done   | `trait Shape: Describe`, `Vec<Box<dyn Shape>>`, `map` + `sum`, good `think about` answers                     |
+| 12  | Custom error types           | `practice12.rs` | Done   | `TodoError` + `Display`, `ok_or(...)?`, `main` triggers both error paths                                      |
+| 13  | `From` and `?` conversion    | `practice13.rs` | Done   | `?` converts via `From`; `main` matches `AppError::Parse` and `AppError::Todo` separately                     |
+| 14  | Modules and `cargo test`     | `practice14.rs` | Done   | inline `mod todo` with `pub`, 4 tests pass (`cargo test --bin practice14`)                                    |
+| 15  | Todo CLI + file persistence  | `practice15.rs` | Done   | `args.as_slice()` match guards, `read_to_string` + `NotFound`, `Io` / `ParseBool` errors, `run()` + `exit(1)` |
 
 Watch points from earlier rounds: finish every bullet of an exercise before review (skipped `list`, `any`/`all`, `collect` before), and give `ok_or` the error itself, not `Err(...)`.
+
+Next: Round 4 (not planned yet). Candidates: `serde` / `clap`, shared `lib.rs`, generics, then lifetimes.
 
 Reminders: avoid lifetimes and `async` for now, and `.clone()` freely when stuck.
