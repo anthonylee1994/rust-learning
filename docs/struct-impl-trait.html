@@ -1,0 +1,1935 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rust: struct, impl and trait (from my practice files)</title>
+    <style>
+      :root {
+        --bg: #fafaf9;
+        --fg: #1c1917;
+        --muted: #57534e;
+        --accent: #c2410c;
+        --card: #ffffff;
+        --border: #e7e5e4;
+        --code-bg: #1c1917;
+        --code-fg: #f5f5f4;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        line-height: 1.65;
+      }
+      main {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 48px 24px 96px;
+      }
+      h1 {
+        font-size: 2.2rem;
+        margin: 0 0 8px;
+      }
+      h2 {
+        margin-top: 56px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--accent);
+      }
+      h3 {
+        margin-top: 32px;
+      }
+      .lead {
+        color: var(--muted);
+        font-size: 1.1rem;
+      }
+      .level {
+        display: inline-block;
+        background: var(--accent);
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        padding: 2px 10px;
+        border-radius: 999px;
+        vertical-align: middle;
+        margin-right: 8px;
+      }
+      .file {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin: 20px 0 -8px;
+      }
+      nav {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px 20px;
+        margin: 24px 0;
+      }
+      nav a {
+        margin-right: 16px;
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      pre {
+        background: var(--code-bg);
+        color: var(--code-fg);
+        padding: 16px 20px;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+      pre.out {
+        background: #292524;
+        border-left: 4px solid #84cc16;
+        color: #d6d3d1;
+        margin-top: -8px;
+      }
+      code {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      }
+      p code,
+      li code,
+      td code {
+        background: #f5f5f4;
+        border: 1px solid var(--border);
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 0.88em;
+      }
+      .callout {
+        background: #fff7ed;
+        border-left: 4px solid var(--accent);
+        padding: 12px 18px;
+        border-radius: 4px;
+        margin: 20px 0;
+      }
+      .callout strong:first-child {
+        color: var(--accent);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--card);
+        border: 1px solid var(--border);
+        margin: 16px 0;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+      th {
+        background: #f5f5f4;
+      }
+      .cmt {
+        color: #8b8680;
+        font-style: italic;
+      }
+      .tok-kw {
+        color: #c084fc;
+      }
+      .tok-str {
+        color: #86efac;
+      }
+      .tok-type {
+        color: #67e8f9;
+      }
+      .tok-fn {
+        color: #fde047;
+      }
+      .tok-macro {
+        color: #f9a8d4;
+      }
+      .tok-num {
+        color: #fdba74;
+      }
+      .tok-attr {
+        color: #a5b4fc;
+      }
+      .score {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 18px;
+        font-weight: 700;
+        margin: 16px 0;
+      }
+      .score button {
+        font: inherit;
+        font-weight: 600;
+        background: var(--accent);
+        color: #fff;
+        border: 0;
+        border-radius: 6px;
+        padding: 4px 14px;
+        cursor: pointer;
+      }
+      .q {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px 20px 8px;
+        margin: 18px 0;
+      }
+      .q-head {
+        font-weight: 700;
+        margin: 0 0 8px;
+      }
+      .q-head .level {
+        font-size: 0.7rem;
+      }
+      .q pre {
+        margin: 8px 0 12px;
+      }
+      .opts {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 12px;
+      }
+      .opts button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        font: inherit;
+        background: #fafaf9;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px 14px;
+        margin: 6px 0;
+        cursor: pointer;
+      }
+      .opts button:hover:not(:disabled) {
+        border-color: var(--accent);
+        background: #fff7ed;
+      }
+      .opts button:disabled {
+        cursor: default;
+        color: inherit;
+      }
+      .opts button.correct {
+        background: #dcfce7;
+        border-color: #16a34a;
+      }
+      .opts button.wrong {
+        background: #fee2e2;
+        border-color: #dc2626;
+      }
+      .explain {
+        border-left: 4px solid var(--accent);
+        background: #fff7ed;
+        padding: 8px 14px;
+        border-radius: 4px;
+        margin: 0 0 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Rust: <code>struct</code>, <code>impl</code> and <code>trait</code></h1>
+      <p class="lead">
+        A walk from easy to hard, using the exercises from this repo. Every code block comes
+        from a real file in <code>src/bin/</code> and the output shown is what
+        <code>cargo run --bin practiceN</code> printed.
+      </p>
+
+      <nav>
+        <a href="#plan">Roadmap</a>
+        <a href="#l1">Level 1: struct</a>
+        <a href="#l2">Level 2: derive</a>
+        <a href="#l3">Level 3: impl</a>
+        <a href="#l4">Level 4: impl + Result</a>
+        <a href="#l5">Level 5: trait</a>
+        <a href="#l6">Level 6: default method</a>
+        <a href="#l7">Level 7: supertrait</a>
+        <a href="#l8">Level 8: generics</a>
+        <a href="#l9">Level 9: Display</a>
+        <a href="#l10">Level 10: From and ?</a>
+        <a href="#l11">Level 11: pub and Default</a>
+        <a href="#l12">Level 12: tests</a>
+        <a href="#l13">Level 13: CLI</a>
+        <a href="#quiz">Review quiz</a>
+      </nav>
+
+      <!-- ============ ROADMAP ============ -->
+      <h2 id="plan">Roadmap</h2>
+      <div class="callout">
+        <strong>Mental model (TypeScript / Rails):</strong>
+        Rust has no <code>class</code>. A TypeScript class or a Rails model is split in two:
+        <code>struct</code> holds the data and <code>impl</code> holds the methods. A
+        <code>trait</code> is like a TypeScript <code>interface</code>: a contract that many
+        types can sign.
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Level</th>
+            <th>Concept</th>
+            <th>Source</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>Plain <code>struct</code> and iterators over it</td>
+            <td><code>practice9.rs</code></td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><code>#[derive(Debug, Clone, PartialEq)]</code></td>
+            <td><code>practice16.rs</code></td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><code>impl</code>: <code>new</code>, <code>&amp;self</code>, <code>&amp;mut self</code></td>
+            <td><code>practice6.rs</code></td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>Struct inside struct, methods returning <code>Result</code></td>
+            <td><code>practice10.rs</code></td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td><code>trait</code>, <code>&amp;impl Trait</code>, <code>Box&lt;dyn Trait&gt;</code></td>
+            <td><code>practice7.rs</code></td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td>Default methods and overriding</td>
+            <td><code>practice19.rs</code></td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td>Supertraits, <code>impl</code> vs <code>dyn</code></td>
+            <td><code>practice11.rs</code></td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td>Generics with trait bounds</td>
+            <td><code>practice18.rs</code></td>
+          </tr>
+          <tr>
+            <td>9</td>
+            <td>Implementing std traits (<code>Display</code>) on your own types</td>
+            <td><code>practice12.rs</code></td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td><code>From</code> trait and how <code>?</code> converts errors</td>
+            <td><code>practice13.rs</code></td>
+          </tr>
+          <tr>
+            <td>11</td>
+            <td><code>pub</code> fields, modules, <code>impl Default</code></td>
+            <td><code>lib.rs</code>, <code>practice14.rs</code>, <code>practice20.rs</code></td>
+          </tr>
+          <tr>
+            <td>12</td>
+            <td>Testing structs and why <code>derive</code> matters there</td>
+            <td><code>lib.rs</code></td>
+          </tr>
+          <tr>
+            <td>13</td>
+            <td>Everything together: a CLI with file storage</td>
+            <td><code>practice15.rs</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ============ LEVEL 1 ============ -->
+      <h2 id="l1"><span class="level">Level 1</span>struct: group data under one name</h2>
+      <p>
+        A <code>struct</code> is a bundle of named fields, like a TypeScript
+        <code>interface Student { name: string; score: number }</code>, except it is a real
+        type with a fixed shape.
+      </p>
+
+      <p class="file">src/bin/practice9.rs</p>
+      <pre><code>struct Student {
+    name: String,
+    score: u32,
+}
+
+fn main() {
+    let list = [
+        Student {
+            name: String::from("John"),
+            score: 80,
+        },
+        Student {
+            name: String::from("Jane"),
+            score: 90,
+        },
+        Student {
+            name: String::from("Jim"),
+            score: 70,
+        },
+        Student {
+            name: String::from("Jill"),
+            score: 60,
+        },
+    ];
+
+    let pass_names: Vec&lt;String&gt; = list
+        .iter()
+        .filter(|x| x.score &gt;= 60)
+        .map(|x| x.name.clone())
+        .collect();
+
+    println!("Pass Names: {:?}", pass_names);
+
+    let avg_score: f64 = list.iter().map(|x| x.score as f64).sum::&lt;f64&gt;() / list.len() as f64;
+
+    println!("Average Score: {:?}", avg_score);
+
+    let best_student = list.iter().max_by_key(|x| x.score);
+
+    if let Some(x) = best_student {
+        println!("Best student: {}", x.name);
+    }
+}</code></pre>
+      <pre class="out"><code>Pass Names: ["John", "Jane", "Jim", "Jill"]
+Average Score: 75.0
+Best student: Jane</code></pre>
+
+      <h3>What to notice</h3>
+      <ul>
+        <li>
+          You must fill <strong>every</strong> field when creating a value. There is no
+          <code>undefined</code> and no default.
+        </li>
+        <li>Read a field with a dot: <code>x.score</code>, exactly like TypeScript.</li>
+        <li>
+          <code>name</code> is a <code>String</code> (owned text). In the <code>.map(...)</code>
+          we need <code>.clone()</code>, because we only <em>borrow</em> the student through
+          <code>.iter()</code> and cannot move the name out.
+        </li>
+        <li>
+          <code>max_by_key</code> returns an <code>Option</code> (the list could be empty), so
+          we unwrap it safely with <code>if let Some(x)</code>.
+        </li>
+      </ul>
+
+      <!-- ============ LEVEL 2 ============ -->
+      <h2 id="l2"><span class="level">Level 2</span>derive: free behavior for your struct</h2>
+      <p>
+        A fresh struct can do almost nothing: you cannot print it, copy it or compare it.
+        <code>#[derive(...)]</code> asks the compiler to generate that code for you. It is a bit
+        like adding <code>include Comparable</code> in Ruby, but done at compile time.
+      </p>
+
+      <p class="file">src/bin/practice16.rs</p>
+      <pre><code>#[derive(Debug, Clone, PartialEq)]
+struct User {
+    name: String,
+    age: u32,
+}
+
+fn find_user(users: &amp;[User], name: &amp;str) -> Option&lt;User&gt; {
+    users.iter().find(|x| x.name == name).cloned()
+}
+
+fn main() {
+    let user1 = User {
+        name: "John".to_string(),
+        age: 20,
+    };
+    let user2 = User {
+        name: "Mary".to_string(),
+        age: 20,
+    };
+    println!("{:?}", user1);
+    println!("{:#?}", user2);
+
+    // PartialEq: compare field by field. Same data means equal.
+    let user1_copy = user1.clone();
+    println!("user1 == user1_copy: {}", user1 == user1_copy);
+    println!("user1 == user2: {}", user1 == user2);
+
+    // `users` takes ownership of user1 and user2, so compare before this line.
+    let users = [user1, user2];
+
+    // if let: only care about the Some case, ignore None.
+    if let Some(u) = find_user(&amp;users, "John") {
+        println!("Found: {:?}", u);
+    }
+
+    // map + unwrap_or: get the age, or fall back to 0 when not found.
+    let found_age = find_user(&amp;users, "John").map(|u| u.age).unwrap_or(0);
+    let missing_age = find_user(&amp;users, "Nobody").map(|u| u.age).unwrap_or(0);
+    println!("John age: {}", found_age);
+    println!("Nobody age: {}", missing_age);
+}</code></pre>
+      <pre class="out"><code>User { name: "John", age: 20 }
+User {
+    name: "Mary",
+    age: 20,
+}
+user1 == user1_copy: true
+user1 == user2: false
+Found: User { name: "John", age: 20 }
+John age: 20
+Nobody age: 0</code></pre>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Derive</th>
+            <th>What you get</th>
+            <th>Seen above</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>Debug</code></td>
+            <td><code>{:?}</code> one-line and <code>{:#?}</code> pretty print</td>
+            <td>Like <code>console.log(obj)</code> and <code>JSON.stringify(obj, null, 2)</code></td>
+          </tr>
+          <tr>
+            <td><code>Clone</code></td>
+            <td><code>.clone()</code> makes a deep copy</td>
+            <td><code>user1.clone()</code>, and <code>.cloned()</code> on the <code>Option</code></td>
+          </tr>
+          <tr>
+            <td><code>PartialEq</code></td>
+            <td><code>==</code> compares field by field</td>
+            <td><code>user1 == user2</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <strong>Why this matters:</strong> the comment in the file says it already: the array
+        <code>[user1, user2]</code> <em>moves</em> both users in, so any comparison must happen
+        before that line. This is ownership showing up in a struct for the first time.
+      </div>
+
+      <!-- ============ LEVEL 3 ============ -->
+      <h2 id="l3"><span class="level">Level 3</span>impl: attach methods to the struct</h2>
+      <p>
+        An <code>impl</code> block is where the functions of a type live. Three kinds appear in
+        practice, and the first parameter tells you which kind it is.
+      </p>
+
+      <p class="file">src/bin/practice6.rs</p>
+      <pre><code>struct Rectangle {
+    width: f64,
+    height: f64,
+}
+
+impl Rectangle {
+    fn new(width: f64, height: f64) -> Self {
+        Self { width, height }
+    }
+
+    fn area(&amp;self) -> f64 {
+        self.width * self.height
+    }
+
+    fn scale(&amp;mut self, factor: f64) {
+        self.width *= factor;
+        self.height *= factor;
+    }
+}
+
+fn main() {
+    let mut rect = Rectangle::new(1.0, 2.0);
+    println!("Rectangle area: {:?}", rect.area());
+    rect.scale(2.0);
+    println!("New rectangle area: {:?}", rect.area());
+}</code></pre>
+      <pre class="out"><code>Rectangle area: 2.0
+New rectangle area: 8.0</code></pre>
+
+      <table>
+        <thead>
+          <tr>
+            <th>In the code</th>
+            <th>Kind</th>
+            <th>Meaning</th>
+            <th>Analogy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>fn new(...)</code></td>
+            <td>Associated function</td>
+            <td>No <code>self</code>. Called as <code>Rectangle::new(...)</code></td>
+            <td>Rails <code>Rectangle.new</code>, TS static factory</td>
+          </tr>
+          <tr>
+            <td><code>fn area(&amp;self)</code></td>
+            <td>Read-only method</td>
+            <td>Borrows the value, many readers allowed</td>
+            <td>A normal getter</td>
+          </tr>
+          <tr>
+            <td><code>fn scale(&amp;mut self)</code></td>
+            <td>Mutating method</td>
+            <td>Borrows for writing, only one writer at a time</td>
+            <td>A setter or bang method (<code>scale!</code>)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>What to notice</h3>
+      <ul>
+        <li>
+          <code>Self</code> (capital S) means "the type of this impl block", so
+          <code>-&gt; Self</code> is the same as <code>-&gt; Rectangle</code>.
+        </li>
+        <li>
+          <code>Self { width, height }</code> uses field init shorthand, same as JavaScript
+          <code>{ width, height }</code>.
+        </li>
+        <li>
+          <code>let mut rect</code> is required, because <code>scale</code> takes
+          <code>&amp;mut self</code>. Remove <code>mut</code> and the compiler stops you.
+        </li>
+        <li>
+          <code>new</code> is only a naming habit, not a keyword. The last line of
+          <code>area</code> has no semicolon, so it is the return value.
+        </li>
+      </ul>
+
+      <div class="callout">
+        <strong>Rule of thumb:</strong> start with <code>&amp;self</code>. Move to
+        <code>&amp;mut self</code> only when you must change a field. A method taking plain
+        <code>self</code> consumes the value, so use that rarely.
+      </div>
+
+      <!-- ============ LEVEL 4 ============ -->
+      <h2 id="l4"><span class="level">Level 4</span>impl in a real shape: a struct holding structs</h2>
+      <p>
+        Now the same ideas build a tiny app. <code>TodoList</code> owns a <code>Vec</code> of
+        <code>Todo</code>, and its methods are the "model layer", like a small Rails model.
+      </p>
+
+      <p class="file">src/bin/practice10.rs</p>
+      <pre><code>struct Todo {
+    id: u32,
+    title: String,
+    done: bool,
+}
+
+struct TodoList {
+    items: Vec&lt;Todo&gt;,
+}
+
+impl TodoList {
+    fn new() -> Self {
+        Self { items: vec![] }
+    }
+
+    fn add(&amp;mut self, title: String) {
+        let id = self.items.len() as u32 + 1;
+        self.items.push(Todo {
+            id,
+            title,
+            done: false,
+        });
+    }
+
+    fn complete(&amp;mut self, id: u32) -> Result&lt;(), String&gt; {
+        let item = self
+            .items
+            .iter_mut()
+            .find(|x| x.id == id)
+            .ok_or("Cannot find the item".to_string())?;
+        item.done = true;
+        Ok(())
+    }
+
+    fn list(&amp;self) {
+        for item in self.items.iter() {
+            println!(
+                "ID: {}, Title: {}, Done: {}",
+                item.id, item.title, item.done
+            );
+        }
+    }
+}
+
+fn main() {
+    let mut todo_list = TodoList::new();
+    todo_list.add("A".to_owned());
+    todo_list.add("B".to_owned());
+    todo_list.add("C".to_owned());
+
+    let first_complete = todo_list.complete(1);
+    let second_complete = todo_list.complete(4);
+
+    match first_complete {
+        Ok(_) => println!("complete"),
+        Err(e) => println!("{}", e),
+    }
+
+    match second_complete {
+        Ok(_) => println!("complete"),
+        Err(e) => println!("{}", e),
+    }
+
+    todo_list.list();
+}</code></pre>
+      <pre class="out"><code>complete
+Cannot find the item
+ID: 1, Title: A, Done: true
+ID: 2, Title: B, Done: false
+ID: 3, Title: C, Done: false</code></pre>
+
+      <h3>What to notice</h3>
+      <ul>
+        <li>
+          <strong>Pick <code>self</code> by what the method does:</strong>
+          <code>add</code> and <code>complete</code> change data so they use
+          <code>&amp;mut self</code>. <code>list</code> only reads so it uses
+          <code>&amp;self</code>.
+        </li>
+        <li>
+          <strong>Failure is a return value, not an exception.</strong>
+          <code>complete</code> returns <code>Result&lt;(), String&gt;</code>. <code>()</code>
+          means "success, nothing to return", like <code>void</code>.
+        </li>
+        <li>
+          <code>.iter_mut().find(...)</code> gives an <code>Option</code> of a mutable
+          reference. <code>.ok_or(...)</code> turns <code>None</code> into an error, and
+          <code>?</code> returns early on error. In Rails terms: <code>find_by!</code> plus an
+          early <code>return</code>.
+        </li>
+        <li>
+          The caller must handle both paths. Rust forces the <code>match</code> on the
+          <code>Result</code>, so you cannot forget the error case.
+        </li>
+      </ul>
+
+      <!-- ============ LEVEL 5 ============ -->
+      <h2 id="l5"><span class="level">Level 5</span>trait: one contract, many types</h2>
+      <p>
+        <code>Rectangle</code> and <code>Circle</code> are different structs, but both can
+        "describe themselves". A <code>trait</code> names that ability, and
+        <code>impl Trait for Type</code> signs the contract. TypeScript equivalent:
+        <code>class Rectangle implements Describe</code>.
+      </p>
+
+      <p class="file">src/bin/practice7.rs</p>
+      <pre><code>struct Rectangle {
+    width: f64,
+    height: f64,
+}
+
+struct Circle {
+    radius: f64,
+}
+
+trait Describe {
+    fn describe(&amp;self) -> String;
+}
+
+impl Describe for Rectangle {
+    fn describe(&amp;self) -> String {
+        format!(
+            "Rectangle {{ width: {}, height: {} }}",
+            self.width, self.height
+        )
+    }
+}
+
+impl Describe for Circle {
+    fn describe(&amp;self) -> String {
+        format!("Circle {{ radius: {} }}", self.radius)
+    }
+}
+
+impl Circle {
+    fn new(radius: f64) -> Self {
+        Self { radius }
+    }
+}
+
+impl Rectangle {
+    fn new(width: f64, height: f64) -> Self {
+        Self { width, height }
+    }
+}
+
+fn main() {
+    let rect = Rectangle::new(1.0, 2.0);
+    let circle = Circle::new(3.0);
+
+    print_it(&amp;rect);
+    print_it(&amp;circle);
+
+    let list: Vec&lt;Box&lt;dyn Describe&gt;&gt; = vec![Box::new(rect), Box::new(circle)];
+
+    for item in list.iter() {
+        println!("{}", item.describe());
+    }
+}
+
+fn print_it(item: &amp;impl Describe) {
+    println!("{}", item.describe());
+}</code></pre>
+      <pre class="out"><code>Rectangle { width: 1, height: 2 }
+Circle { radius: 3 }
+Rectangle { width: 1, height: 2 }
+Circle { radius: 3 }</code></pre>
+
+      <h3>Three things happen here</h3>
+      <ol>
+        <li>
+          <strong>Define:</strong> <code>trait Describe</code> only lists the signature, no
+          body. Every implementor must write <code>describe</code>.
+        </li>
+        <li>
+          <strong>Implement:</strong> <code>impl Describe for Rectangle</code> and
+          <code>impl Describe for Circle</code> live <em>outside</em> the struct. Note that
+          <code>Rectangle</code> has two separate impl blocks (one for <code>new</code>, one for
+          the trait). That is fine.
+        </li>
+        <li>
+          <strong>Use:</strong> <code>print_it(item: &amp;impl Describe)</code> accepts
+          <em>anything</em> with <code>describe</code>. It works for both types and has no
+          runtime cost.
+        </li>
+      </ol>
+
+      <h3>The error you hit (and why)</h3>
+      <p>
+        A first attempt was <code>vec![rect, circle]</code>. It fails because a
+        <code>Vec</code> holds <strong>one</strong> type and the two structs have different
+        sizes. The fix is <code>Vec&lt;Box&lt;dyn Describe&gt;&gt;</code>:
+      </p>
+      <ul>
+        <li>
+          <code>dyn Describe</code> means "some type that implements Describe, decided at run
+          time".
+        </li>
+        <li>
+          <code>Box</code> puts each value on the heap, so every list slot is the same size
+          (just a pointer).
+        </li>
+      </ul>
+
+      <div class="callout">
+        <strong>Note on <code>{{</code>:</strong> in <code>format!</code>, a literal brace is
+        written twice. <code>{{</code> prints <code>{</code>.
+      </div>
+
+      <!-- ============ LEVEL 6 ============ -->
+      <h2 id="l6"><span class="level">Level 6</span>default methods: share code inside a trait</h2>
+      <p>
+        A trait can include a finished method. Implementors get it for free and may override it.
+        It is like a Ruby module with a default implementation, or an abstract class method in
+        TypeScript.
+      </p>
+
+      <p class="file">src/bin/practice19.rs</p>
+      <pre><code>trait Animal {
+    fn name(&amp;self) -> String;
+    fn speak(&amp;self) -> String;
+    fn intro(&amp;self) -> String {
+        format!("My name is {} and I say {}!", self.name(), self.speak())
+    }
+}
+
+struct Dog {
+    name: String,
+}
+
+struct Cat {
+    name: String,
+}
+
+impl Animal for Dog {
+    fn name(&amp;self) -> String {
+        self.name.clone()
+    }
+    fn speak(&amp;self) -> String {
+        "woof".to_string()
+    }
+    fn intro(&amp;self) -> String {
+        format!(
+            "My name is {} and I'm a dog. I say {}!",
+            self.name(),
+            self.speak()
+        )
+    }
+}
+
+impl Animal for Cat {
+    fn name(&amp;self) -> String {
+        self.name.clone()
+    }
+    fn speak(&amp;self) -> String {
+        "meow".to_string()
+    }
+}
+
+fn main() {
+    let animals: Vec&lt;Box&lt;dyn Animal&gt;&gt; = vec![
+        Box::new(Dog {
+            name: "Buddy".to_string(),
+        }),
+        Box::new(Cat {
+            name: "Whiskers".to_string(),
+        }),
+    ];
+    for animal in animals {
+        println!("{}", animal.intro());
+    }
+}</code></pre>
+      <pre class="out"><code>My name is Buddy and I'm a dog. I say woof!
+My name is Whiskers and I say meow!</code></pre>
+
+      <h3>What to notice</h3>
+      <ul>
+        <li>
+          <code>name</code> and <code>speak</code> are <strong>required</strong>. <code>intro</code>
+          has a body, so it is <strong>optional</strong> to implement.
+        </li>
+        <li>
+          The default <code>intro</code> calls <code>self.name()</code> and
+          <code>self.speak()</code>. It builds on the required methods, so one default works for
+          every type.
+        </li>
+        <li><code>Cat</code> takes the default. <code>Dog</code> overrides it with its own text.</li>
+        <li>
+          The loop uses the same trait method on different types through
+          <code>Box&lt;dyn Animal&gt;</code>. This is polymorphism without inheritance.
+        </li>
+      </ul>
+
+      <!-- ============ LEVEL 7 ============ -->
+      <h2 id="l7"><span class="level">Level 7</span>supertraits and <code>impl</code> vs <code>dyn</code></h2>
+      <p>
+        A trait can require another trait: <code>trait Shape: Describe</code> reads "to be a
+        Shape you must also be Describe". It is like <code>interface Shape extends Describe</code>
+        in TypeScript.
+      </p>
+
+      <p class="file">src/bin/practice11.rs (trimmed to the key parts)</p>
+      <pre><code>trait Describe {
+    fn describe(&amp;self) -> String;
+}
+
+trait Shape: Describe {
+    fn area(&amp;self) -> f64;
+}
+
+<span class="cmt">// ... impl Describe for Rectangle / Circle, impl Shape for Circle / Rectangle ...</span>
+
+fn main() {
+    let list: Vec&lt;Box&lt;dyn Shape&gt;&gt; = vec![
+        Box::new(Rectangle::new(1.0, 2.0)),
+        Box::new(Rectangle::new(3.0, 4.0)),
+        Box::new(Circle::new(3.0)),
+    ];
+
+    for item in list.iter() {
+        println!("{}", item.describe());
+    }
+    println!("Total area: {}", total_area(&amp;list));
+    print_area(&amp;Rectangle::new(1.0, 2.0));
+}
+
+fn total_area(shapes: &amp;[Box&lt;dyn Shape&gt;]) -> f64 {
+    shapes.iter().map(|x| x.area()).sum()
+}
+
+fn print_area(shape: &amp;impl Shape) {
+    println!("Area: {}", shape.area())
+}</code></pre>
+      <pre class="out"><code>Rectangle { width: 1, height: 2 }
+Rectangle { width: 3, height: 4 }
+Circle { radius: 3 }
+Total area: 42.27433388230814
+Area: 2</code></pre>
+
+      <h3>Why can <code>describe()</code> be called on a <code>Box&lt;dyn Shape&gt;</code>?</h3>
+      <p>
+        Because <code>Shape: Describe</code> is a supertrait. Any type that implements
+        <code>Shape</code> must also implement <code>Describe</code>, so a
+        <code>dyn Shape</code> always has <code>describe()</code>.
+      </p>
+
+      <h3>When to use <code>impl Shape</code> vs <code>dyn Shape</code></h3>
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th><code>&amp;impl Shape</code></th>
+            <th><code>Box&lt;dyn Shape&gt;</code></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Type decided</td>
+            <td>Compile time (one concrete type per call)</td>
+            <td>Run time</td>
+          </tr>
+          <tr>
+            <td>Speed</td>
+            <td>Direct call, fastest</td>
+            <td>Small lookup cost</td>
+          </tr>
+          <tr>
+            <td>Needs a pointer?</td>
+            <td>No</td>
+            <td>Yes (<code>Box</code>, <code>&amp;</code>)</td>
+          </tr>
+          <tr>
+            <td>Mixed types in one collection?</td>
+            <td>No</td>
+            <td><strong>Yes</strong></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="callout">
+        <strong>Default to <code>impl</code>.</strong> Reach for <code>dyn</code> only when
+        different types must live together, like the <code>Vec</code> above.
+      </div>
+
+      <!-- ============ LEVEL 8 ============ -->
+      <h2 id="l8"><span class="level">Level 8</span>generics: traits as requirements on a type</h2>
+      <p>
+        So far a trait described what a type <em>can do</em>. With generics, a trait becomes a
+        <em>requirement</em>: "I accept any type <code>T</code>, as long as it can do X". It is
+        the same as <code>T extends Comparable</code> in TypeScript.
+      </p>
+
+      <p class="file">src/bin/practice18.rs</p>
+      <pre><code>fn largest&lt;T: PartialOrd + Copy&gt;(items: &amp;[T]) -> Option&lt;T&gt; {
+    if items.is_empty() {
+        return None;
+    }
+
+    let mut largest = items[0];
+    for &amp;item in items {
+        if item &gt; largest {
+            largest = item;
+        }
+    }
+    Some(largest)
+}
+
+struct Pair&lt;T&gt; {
+    a: T,
+    b: T,
+}
+
+impl&lt;T: PartialOrd + std::fmt::Display&gt; Pair&lt;T&gt; {
+    fn print_larger(&amp;self) {
+        if self.a &gt; self.b {
+            println!("{} is larger", self.a);
+        } else {
+            println!("{} is larger", self.b);
+        }
+    }
+}
+
+fn main() {
+    println!("{:?}", largest(&amp;[1, 2, 3, 4, 5]).unwrap());
+    println!("{:?}", largest(&amp;[1.0, 2.0, 3.0, 4.0, 5.0]).unwrap());
+    println!("{}", largest(&amp;["apple", "banana", "cherry"]).unwrap());
+
+    let pair = Pair { a: 1, b: 2 };
+    pair.print_larger();
+}</code></pre>
+      <pre class="out"><code>5
+5.0
+cherry
+2 is larger</code></pre>
+
+      <h3>Reading the bounds</h3>
+      <ul>
+        <li>
+          <code>T: PartialOrd + Copy</code>: <code>PartialOrd</code> gives <code>&gt;</code>,
+          <code>Copy</code> lets <code>items[0]</code> be copied out of the slice without
+          moving it. Drop either and the compiler tells you exactly which one is missing.
+        </li>
+        <li>
+          <code>struct Pair&lt;T&gt;</code> is a struct with a type parameter, like
+          <code>interface Pair&lt;T&gt;</code>. Both fields share the <strong>same</strong>
+          <code>T</code>.
+        </li>
+        <li>
+          <code>impl&lt;T: PartialOrd + Display&gt; Pair&lt;T&gt;</code> means: this method only
+          exists when <code>T</code> can be compared and printed. A
+          <code>Pair</code> of something that cannot be compared simply has no
+          <code>print_larger</code>.
+        </li>
+        <li>
+          Return <code>Option&lt;T&gt;</code> instead of panicking on an empty slice. That is the
+          idiomatic Rust answer to "what if there is nothing?".
+        </li>
+      </ul>
+
+      <!-- ============ LEVEL 9 ============ -->
+      <h2 id="l9"><span class="level">Level 9</span>implement a std trait: <code>Display</code></h2>
+      <p>
+        The same <code>impl Trait for Type</code> works on traits from the standard library. If
+        you implement <code>fmt::Display</code>, your type works with <code>{}</code> and
+        <code>.to_string()</code>. This is the base of custom error types.
+      </p>
+
+      <p class="file">src/bin/practice12.rs (error part)</p>
+      <pre><code>use std::fmt;
+
+#[derive(Debug)]
+enum TodoError {
+    NotFound(u32),
+    EmptyTitle,
+}
+
+impl fmt::Display for TodoError {
+    fn fmt(&amp;self, f: &amp;mut fmt::Formatter) -> fmt::Result {
+        match self {
+            TodoError::NotFound(id) =&gt; write!(f, "todo #{} not found", id),
+            TodoError::EmptyTitle =&gt; write!(f, "title cannot be empty"),
+        }
+    }
+}
+
+<span class="cmt">// in TodoList:</span>
+fn complete(&amp;mut self, id: u32) -> Result&lt;(), TodoError&gt; {
+    let todo = self
+        .items
+        .iter_mut()
+        .find(|todo| todo.id == id)
+        .ok_or(TodoError::NotFound(id))?;
+    todo.done = true;
+    Ok(())
+}</code></pre>
+
+      <h3>What to notice</h3>
+      <ul>
+        <li>
+          <code>Debug</code> is derived (free). <code>Display</code> is written by hand, because
+          only you know how a user should read the message.
+        </li>
+        <li>
+          Compare with Level 4: the error type changed from <code>String</code> to
+          <code>TodoError</code>. The caller can now <code>match</code> on each variant, and if
+          you add a new variant the compiler points at every place that must handle it.
+        </li>
+        <li>
+          This is the full picture: <code>enum</code> (data) + <code>impl Display</code>
+          (behavior via a trait) + <code>Result</code> (how it is used).
+        </li>
+      </ul>
+
+      <!-- ============ LEVEL 10 ============ -->
+      <h2 id="l10"><span class="level">Level 10</span>From: how <code>?</code> converts errors</h2>
+      <p>
+        Real programs mix errors: parsing text can fail with <code>ParseIntError</code>, the todo
+        list can fail with <code>TodoError</code>. A function can only return one error type, so
+        we wrap both in one <code>AppError</code> enum. The <code>From</code> trait teaches Rust
+        how to wrap each one. In Rails terms: a <code>rescue_from</code> that maps many
+        exceptions into one app-level error.
+      </p>
+
+      <p class="file">src/bin/practice13.rs (error and conversion part)</p>
+      <pre><code>#[derive(Debug)]
+enum AppError {
+    Parse(std::num::ParseIntError),
+    Todo(TodoError),
+}
+
+impl From&lt;num::ParseIntError&gt; for AppError {
+    fn from(value: num::ParseIntError) -> Self {
+        AppError::Parse(value)
+    }
+}
+
+impl From&lt;TodoError&gt; for AppError {
+    fn from(value: TodoError) -> Self {
+        AppError::Todo(value)
+    }
+}
+
+fn complete_by_text(list: &amp;mut TodoList, input: &amp;str) -> Result&lt;(), AppError&gt; {
+    let id = input.parse::&lt;u32&gt;()?;   <span class="cmt">// ParseIntError becomes AppError::Parse</span>
+    list.complete(id)?;              <span class="cmt">// TodoError becomes AppError::Todo</span>
+
+    Ok(())
+}
+
+fn main() {
+    let mut todo_list = TodoList::new();
+    todo_list.add("todo".to_owned()).unwrap();
+
+    for input in ["1", "abc", "99"] {
+        match complete_by_text(&amp;mut todo_list, input) {
+            Ok(()) => println!("todo #{} completed", input),
+            Err(AppError::Parse(e)) => println!("'{}' is not a number: {}", input, e),
+            Err(AppError::Todo(e)) => println!("todo error: {}", e),
+        }
+    }
+
+    todo_list.list();
+}</code></pre>
+      <pre class="out"><code>todo #1 completed
+'abc' is not a number: invalid digit found in string
+todo error: todo #99 not found
+[x] #1 todo</code></pre>
+
+      <h3>What <code>?</code> really does</h3>
+      <p>
+        <code>expr?</code> means: on <code>Ok(v)</code>, give me <code>v</code>. On
+        <code>Err(e)</code>, <strong>return early with <code>From::from(e)</code></strong>. That
+        <code>From::from</code> call is the hidden step. Two lines in
+        <code>complete_by_text</code> fail with two different error types, yet both compile,
+        because each has an <code>impl From&lt;...&gt; for AppError</code>.
+      </p>
+
+      <ul>
+        <li>
+          <strong>Generic trait:</strong> <code>From&lt;T&gt;</code> takes a type parameter, so
+          <code>AppError</code> can implement it several times, once per source error. Same
+          trait name, different <code>T</code>.
+        </li>
+        <li>
+          <strong>Remove one impl</strong> and the matching <code>?</code> stops compiling. The
+          error says <code>?</code> couldn't convert, which tells you exactly which
+          <code>From</code> is missing.
+        </li>
+        <li>
+          <strong>Callers choose:</strong> the <code>match</code> in <code>main</code> handles
+          <code>Parse</code> and <code>Todo</code> differently, which a plain
+          <code>String</code> error could never do safely.
+        </li>
+      </ul>
+
+      <!-- ============ LEVEL 11 ============ -->
+      <h2 id="l11"><span class="level">Level 11</span>pub, modules and <code>impl Default</code></h2>
+      <p>
+        Once code moves into a module or a library, a new rule bites: <strong>everything is
+        private by default</strong>, including struct fields. This is the opposite of
+        TypeScript's public-by-default. The shared <code>src/lib.rs</code> shows it:
+      </p>
+
+      <p class="file">src/lib.rs (top part)</p>
+      <pre><code>pub struct Todo {
+    pub id: u32,
+    pub title: String,
+    pub done: bool,
+}
+
+pub struct TodoList {
+    pub items: Vec&lt;Todo&gt;,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum TodoError {
+    NotFound(u32),
+    EmptyTitle,
+}
+
+impl TodoList {
+    pub fn new() -> Self {
+        Self { items: Vec::new() }
+    }
+
+    <span class="cmt">// ... add, complete, list are all `pub fn` too ...</span>
+}
+
+impl Default for TodoList {
+    fn default() -> Self {
+        Self::new()
+    }
+}</code></pre>
+
+      <p class="file">src/bin/practice20.rs (a different crate using the library)</p>
+      <pre><code>use rust_learning::{TodoError, TodoList};
+
+fn main() {
+    let mut todo_list = TodoList::new();
+    todo_list.add("Buy groceries".to_string()).unwrap();
+    todo_list.add("Buy a new phone".to_string()).unwrap();
+    let ids: Vec&lt;u32&gt; = todo_list.items.iter().map(|todo| todo.id).collect();
+    for id in ids {
+        match todo_list.complete(id) {
+            Ok(_) => println!("Todo completed"),
+            Err(TodoError::NotFound(id)) => println!("Todo #{} not found", id),
+            Err(TodoError::EmptyTitle) => println!("Title cannot be empty"),
+        }
+    }
+    todo_list.list();
+}</code></pre>
+      <pre class="out"><code>Todo completed
+Todo completed
+[x] #1 Buy groceries
+[x] #2 Buy a new phone</code></pre>
+
+      <h3>Privacy rules in one table</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>You write</th>
+            <th>Outside code can</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>struct Todo</code></td>
+            <td>Not even name the type</td>
+          </tr>
+          <tr>
+            <td><code>pub struct Todo { id: u32 }</code></td>
+            <td>Name the type, but <strong>cannot read or set <code>id</code></strong></td>
+          </tr>
+          <tr>
+            <td><code>pub struct Todo { pub id: u32 }</code></td>
+            <td>Read and set <code>id</code></td>
+          </tr>
+          <tr>
+            <td><code>fn new()</code> inside impl</td>
+            <td>Not call it. Needs <code>pub fn new()</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <strong>Design choice:</strong> making fields private and exposing only
+        <code>pub fn</code> methods is how you protect rules, such as "title cannot be empty".
+        Here the fields are <code>pub</code> because this is a learning project, but in a real
+        library you would keep <code>items</code> private and add methods.
+      </div>
+
+      <h3>Two more things in this code</h3>
+      <ul>
+        <li>
+          <strong><code>impl Default for TodoList</code></strong> is another std trait. It says
+          "what is an empty one?" so <code>TodoList::default()</code> works. Here it just calls
+          <code>new()</code>. When every field has a sensible empty value (a
+          <code>Vec</code> does), <code>#[derive(Default)]</code> would write it for you.
+        </li>
+        <li>
+          <strong>The E0499 fix in <code>main</code>:</strong> looping over
+          <code>todo_list.items</code> while calling <code>todo_list.complete</code> would borrow
+          the list as read and as write at the same time. Collecting the <code>ids</code> first
+          ends the first borrow before the loop starts.
+        </li>
+      </ul>
+
+      <!-- ============ LEVEL 12 ============ -->
+      <h2 id="l12"><span class="level">Level 12</span>tests: proof that your impl works</h2>
+      <p>
+        Tests live next to the code, in a module that is only compiled for
+        <code>cargo test</code>. It is like a Jest file or a Rails spec, but in the same file as
+        the code, so it can use private items.
+      </p>
+
+      <p class="file">src/lib.rs (tests part, 2 of 4 tests)</p>
+      <pre><code>#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn add_rejects_empty_title() {
+        let mut list = TodoList::new();
+        let result = list.add("".to_string());
+        assert!(result.is_err());
+        assert_eq!(result.err().unwrap(), TodoError::EmptyTitle);
+    }
+
+    #[test]
+    fn complete_item_returns_error_if_not_found() {
+        let mut list = TodoList::new();
+        list.add(String::from("buy groceries")).unwrap();
+        let result = list.complete(2);
+        assert!(result.is_err());
+        assert_eq!(result.err().unwrap(), TodoError::NotFound(2));
+    }
+}</code></pre>
+      <pre class="out"><code>running 4 tests
+....
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out</code></pre>
+
+      <h3>Where the earlier levels pay off</h3>
+      <ul>
+        <li>
+          <code>assert_eq!(a, b)</code> uses <code>==</code> and prints both sides when they
+          differ. That requires the type to have <code>PartialEq</code> (for <code>==</code>)
+          and <code>Debug</code> (for printing). This is exactly why
+          <code>TodoError</code> has <code>#[derive(Debug, PartialEq)]</code> (Level 2).
+        </li>
+        <li>
+          <code>use super::*;</code> pulls everything from the parent module into the test
+          module. Without it the test cannot see <code>TodoList</code> (Level 11).
+        </li>
+        <li>
+          Because errors are enum variants (Level 9), you can assert on
+          <code>NotFound(2)</code> precisely, instead of comparing message strings.
+        </li>
+        <li>
+          Run with <code>cargo test</code>. Add <code>-- --nocapture</code> to see
+          <code>println!</code> output.
+        </li>
+      </ul>
+
+      <!-- ============ LEVEL 13 ============ -->
+      <h2 id="l13"><span class="level">Level 13</span>putting it all together: a CLI with file storage</h2>
+      <p>
+        The capstone uses every piece: structs for data, impl for behavior, a custom error enum
+        with <code>Display</code> and four <code>From</code> impls, and <code>?</code> everywhere.
+        Here are the three parts that matter, with the repetitive impls left out.
+      </p>
+
+      <p class="file">src/bin/practice15.rs (trimmed)</p>
+      <pre><code>#[derive(Debug)]
+enum AppError {
+    Parse(std::num::ParseIntError),
+    ParseBool(std::str::ParseBoolError),
+    InvalidLine(String),
+    Todo(TodoError),
+    Io(std::io::Error),
+}
+
+<span class="cmt">// ... impl Display for AppError, and impl From&lt;...&gt; for AppError x4 ...</span>
+
+impl TodoList {
+    fn load(&amp;mut self) -> Result&lt;(), AppError&gt; {
+        let contents = match read_to_string("todos.txt") {
+            Ok(contents) =&gt; contents,
+            Err(e) if e.kind() == ErrorKind::NotFound =&gt; return Ok(()),
+            Err(e) =&gt; return Err(e.into()),
+        };
+        for line in contents.lines() {
+            let parts = line.split('|').collect::&lt;Vec&lt;&amp;str&gt;&gt;();
+            if parts.len() != 3 {
+                return Err(AppError::InvalidLine(line.to_string()));
+            }
+            let id = parts[0].parse::&lt;u32&gt;()?;
+            let done = parts[1].parse::&lt;bool&gt;()?;
+            let title = parts[2].to_string();
+            self.items.push(Todo { id, title, done });
+        }
+        Ok(())
+    }
+
+    fn save(&amp;self) -> Result&lt;(), AppError&gt; {
+        let mut file = std::fs::File::create("todos.txt")?;
+        for todo in &amp;self.items {
+            file.write_fmt(format_args!("{}|{}|{}\n", todo.id, todo.done, todo.title))?;
+        }
+        Ok(())
+    }
+}
+
+fn main() {
+    if let Err(e) = run() {
+        eprintln!("Error: {}", e);
+        std::process::exit(1);
+    }
+}
+
+fn run() -> Result&lt;(), AppError&gt; {
+    let args = std::env::args().collect::&lt;Vec&lt;String&gt;&gt;();
+    let mut todos = TodoList::new();
+    todos.load()?;
+
+    match args.as_slice() {
+        [_, cmd, title] if cmd == "add" =&gt; {
+            let id = todos.add(title.clone())?;
+            todos.save()?;
+            println!("added #{}", id);
+        }
+        [_, cmd] if cmd == "list" =&gt; todos.list(),
+        [_, cmd, id] if cmd == "done" =&gt; {
+            todos.complete(id.parse::&lt;u32&gt;()?)?;
+            todos.save()?;
+            println!("completed #{}", id);
+        }
+        _ => print_usage(),
+    }
+    Ok(())
+}</code></pre>
+      <p>Running it with no arguments hits the <code>_</code> arm:</p>
+      <pre class="out"><code>Usage:
+  cargo run --bin practice15 -- add &lt;title&gt;
+  cargo run --bin practice15 -- list
+  cargo run --bin practice15 -- done &lt;id&gt;</code></pre>
+
+      <h3>Patterns worth stealing</h3>
+      <ul>
+        <li>
+          <strong>Thin <code>main</code>, real work in <code>run()</code>.</strong>
+          <code>run</code> returns <code>Result&lt;(), AppError&gt;</code> so it can use
+          <code>?</code> freely. <code>main</code> is the only place that prints the error and
+          sets the exit code. In Node this is your top-level <code>catch</code> plus
+          <code>process.exit(1)</code>.
+        </li>
+        <li>
+          <strong>Match guards on a slice.</strong>
+          <code>[_, cmd, title] if cmd == "add"</code> checks the shape (3 items) and the value in
+          one arm, like a tiny router.
+        </li>
+        <li>
+          <strong>Handle one error, forward the rest.</strong> In <code>load</code>, a missing
+          file is not an error (first run), so <code>Err(e) if e.kind() == NotFound</code>
+          returns <code>Ok</code>. Every other IO error is forwarded with
+          <code>e.into()</code>, which is <code>From</code> from Level 10 called by hand.
+        </li>
+        <li>
+          <strong>Five variants, one match.</strong> Parsing ints, parsing bools, IO, bad lines
+          and todo rules all end up in <code>AppError</code>, and a single
+          <code>Display</code> turns each into a user-friendly message.
+        </li>
+      </ul>
+
+      <h3>Design review: known weak spots</h3>
+      <p>
+        Good code reviews name what is weak. These are recorded in <code>STATE.md</code>, and
+        each one is a good next exercise:
+      </p>
+      <ul>
+        <li>
+          <code>save</code> uses <code>File::create</code>, which empties the file first. A crash
+          halfway leaves a broken <code>todos.txt</code>. Fix idea: write a temp file, then
+          <code>rename</code> it.
+        </li>
+        <li>
+          <code>add</code> builds the id from <code>len() + 1</code>. Once <code>delete</code>
+          exists, two todos can get the same id. Fix idea: keep a <code>next_id</code> field in
+          <code>TodoList</code>.
+        </li>
+        <li>
+          <code>practice10</code> to <code>practice15</code> each carry their own copy of the
+          todo code. Only <code>practice20</code> uses the shared <code>lib.rs</code>.
+        </li>
+      </ul>
+
+      <!-- ============ QUIZ ============ -->
+      <h2 id="quiz">Review quiz</h2>
+      <p>
+        20 multiple-choice questions, ordered like the levels above (easy to hard). Click an
+        answer to see if you are right and read why. Try to answer before scrolling back up.
+      </p>
+
+      <div class="score" id="score" aria-live="polite">
+        <span id="score-text">Score: 0 / 20</span>
+        <button type="button" id="quiz-reset">Reset</button>
+      </div>
+
+      <div id="quiz"></div>
+
+      <div class="callout">
+        <strong>Next step:</strong> take Level 7 and add a <code>Triangle</code> struct. If you
+        implement only <code>Shape</code> and forget <code>Describe</code>, the compiler will
+        reject it. That error is the supertrait rule in action.
+      </div>
+    </main>
+
+    <script>
+      // Tiny Rust syntax highlighter, no external dependency
+      const KEYWORDS =
+        "fn|struct|impl|trait|for|let|mut|use|pub|self|Self|where|match|if|else|return|enum|dyn|as|in|loop|while|const|static|mod|ref|move";
+      const PRIMITIVES = "u8|u16|u32|u64|usize|i8|i16|i32|i64|isize|f32|f64|bool|char|str";
+
+      const TOKEN_RE = new RegExp(
+        [
+          "(?<cmt>//[^\\n]*)",
+          '(?<str>"(?:\\\\.|[^"\\\\])*")',
+          "(?<attr>#\\[[^\\]]*\\])",
+          "(?<kw>\\b(?:" + KEYWORDS + ")\\b)",
+          "(?<macro>\\b[a-z_][a-z0-9_]*!)",
+          "(?<num>\\b\\d[\\d_]*(?:\\.\\d+)?\\b)",
+          "(?<type>\\b(?:" + PRIMITIVES + ")\\b|\\b[A-Z][A-Za-z0-9_]*\\b)",
+          "(?<fn>\\b[a-z_][a-z0-9_]*(?=\\s*(?:::<[^>]*>)?\\())",
+        ].join("|"),
+        "g",
+      );
+
+      function escapeHtml(text) {
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+
+      function highlight(source) {
+        let out = "";
+        let last = 0;
+        for (const m of source.matchAll(TOKEN_RE)) {
+          out += escapeHtml(source.slice(last, m.index));
+          const kind = Object.keys(m.groups).find((key) => m.groups[key] !== undefined);
+          const cls = kind === "cmt" ? "cmt" : "tok-" + kind;
+          out += '<span class="' + cls + '">' + escapeHtml(m[0]) + "</span>";
+          last = m.index + m[0].length;
+        }
+        return out + escapeHtml(source.slice(last));
+      }
+
+      // Skip program output blocks, they are plain text
+      document.querySelectorAll("pre:not(.out) code").forEach((block) => {
+        block.innerHTML = highlight(block.textContent);
+      });
+
+      // ---------- Review quiz ----------
+      const QUESTIONS = [
+        {
+          level: 1,
+          q: "You create a `Student { name, score }` value. What must you do with the fields?",
+          options: [
+            "Skip the ones you do not need, they stay empty",
+            "Give a value to every field",
+            "Skip any field, it becomes `null`",
+            "Skip any field, it gets the type's default value",
+          ],
+          answer: 1,
+          explain:
+            "Rust has no `null`/`undefined` and no implicit defaults. Every field must be set when you build a struct value.",
+        },
+        {
+          level: 2,
+          q: "`println!(\"{:?}\", user)` does not compile for your new `User` struct. What fixes it?",
+          options: [
+            "Declare the variable with `let mut`",
+            "Use `{}` instead, it works for every type",
+            "Add `#[derive(Debug)]` above the struct",
+            "Wrap the value in `Box::new`",
+          ],
+          answer: 2,
+          explain:
+            "A fresh struct implements no traits. `{:?}` needs `Debug`, and `#[derive(Debug)]` makes the compiler write it for you. `{}` needs `Display`, which cannot be derived.",
+        },
+        {
+          level: 2,
+          q: "Why does this fail to compile?",
+          code: "let users = [user1, user2];\nprintln!(\"{}\", user1 == user2);",
+          options: [
+            "`user1` and `user2` were moved into the array",
+            "Arrays cannot hold structs",
+            "`==` only works on numbers",
+            "`users` should be declared with `mut`",
+          ],
+          answer: 0,
+          explain:
+            "`String` fields are not `Copy`, so building the array moves both users. Compare first, or use `.clone()`. This is ownership showing up inside a struct.",
+        },
+        {
+          level: 3,
+          q: "Which method signature is the right one for a method that changes the struct's fields in place?",
+          options: [
+            "`fn scale(&self, factor: f64)`",
+            "`fn scale(factor: f64)`",
+            "`fn scale(self, factor: f64)`",
+            "`fn scale(&mut self, factor: f64)`",
+          ],
+          answer: 3,
+          explain:
+            "`&mut self` borrows the value for writing. `&self` is read-only, plain `self` consumes the value, and no `self` makes it an associated function like `new`.",
+        },
+        {
+          level: 3,
+          q: "Why does this fail to compile, even though `scale` takes `&mut self`?",
+          code: "let rect = Rectangle::new(1.0, 2.0);\nrect.scale(2.0);",
+          options: [
+            "`new` must return a reference",
+            "`rect` was not declared with `let mut`",
+            "`scale` must be called as `Rectangle::scale(2.0)`",
+            "`2.0` is not an `f64`",
+          ],
+          answer: 1,
+          explain:
+            "Variables are immutable by default. To borrow `rect` mutably you need `let mut rect`.",
+        },
+        {
+          level: 4,
+          q: "In `TodoList::complete`, what does the `?` after `.ok_or(...)` do?",
+          options: [
+            "Turns the error into a panic",
+            "Ignores the error and continues",
+            "Returns `Err` from `complete` early, or unwraps the value on success",
+            "Converts `None` into `Some`",
+          ],
+          answer: 2,
+          explain:
+            "`?` unwraps `Ok(v)` into `v`. On `Err(e)` it returns early from the current function. It replaces `try/catch` for the simple case.",
+        },
+        {
+          level: 4,
+          q: "In `TodoList`, `add` takes `&mut self` but `list` takes `&self`. Why?",
+          options: [
+            "`list` is a private method",
+            "`list` runs faster with `&self`",
+            "`&self` is required for any method that prints",
+            "`add` pushes into `items` (a change), while `list` only reads",
+          ],
+          answer: 3,
+          explain:
+            "Pick `self` by what the method does. Changing data needs `&mut self`, reading needs `&self`. Using the weakest borrow that works lets many readers share the value.",
+        },
+        {
+          level: 5,
+          q: "`vec![rect, circle]` does not compile when `Rectangle` and `Circle` both implement `Describe`. What is the fix?",
+          options: [
+            "Add `.clone()` to both values",
+            "Declare the vec with `let mut`",
+            "Implement `Describe` a second time",
+            "Use `Vec<Box<dyn Describe>>` and wrap each value in `Box::new`",
+          ],
+          answer: 3,
+          explain:
+            "A `Vec` holds one type, and the two structs have different sizes. `Box<dyn Describe>` makes every slot a pointer of the same size and picks the method at run time.",
+        },
+        {
+          level: 5,
+          q: "When must you choose `Box<dyn Trait>` over `&impl Trait`?",
+          options: [
+            "When different types must live together in one collection",
+            "Whenever you want faster code",
+            "When the trait has a default method",
+            "When the struct has more than one field",
+          ],
+          answer: 0,
+          explain:
+            "`impl Trait` fixes one concrete type per call and is faster. `dyn Trait` pays a small run-time cost but allows a mixed `Vec`. Default to `impl`.",
+        },
+        {
+          level: 6,
+          q: "`Animal` has a default `intro()`. `Cat` implements only `name` and `speak`. What does `cat.intro()` do?",
+          options: [
+            "Compile error: `intro` is missing",
+            "Runs the default `intro` from the trait",
+            "Panics at run time",
+            "Returns an empty `String`",
+          ],
+          answer: 1,
+          explain:
+            "A method with a body in the trait is optional to implement. `Dog` overrides it, `Cat` simply inherits the default, which calls `self.name()` and `self.speak()`.",
+        },
+        {
+          level: 7,
+          q: "With `trait Shape: Describe`, you write `impl Shape for Triangle` but forget `impl Describe for Triangle`. What happens?",
+          options: [
+            "It compiles, and `describe()` returns an empty string",
+            "It compiles, and `describe()` panics when called",
+            "The compiler rejects it because `Triangle` must also implement `Describe`",
+            "Rust adds `Describe` automatically",
+          ],
+          answer: 2,
+          explain:
+            "`Shape: Describe` is a supertrait rule. Every `Shape` is also a `Describe`, so a `dyn Shape` can always call `describe()`.",
+        },
+        {
+          level: 8,
+          q: "What does the compiler complain about here?",
+          code: "fn largest<T: Copy>(items: &[T]) -> Option<T> {\n    let mut largest = items[0];\n    for &item in items {\n        if item > largest { largest = item; }\n    }\n    Some(largest)\n}",
+          options: [
+            "`T` cannot be compared with `>` because `PartialOrd` is missing from the bound",
+            "`Option` cannot hold a generic type",
+            "`items[0]` panics on an empty slice",
+            "`for &item` is invalid syntax",
+          ],
+          answer: 0,
+          explain:
+            "A bound is a requirement. Without `PartialOrd`, the compiler cannot assume `>` exists for `T`, and the error names the missing trait.",
+        },
+        {
+          level: 8,
+          q: "What does `impl<T: PartialOrd + Display> Pair<T>` mean for `print_larger`?",
+          options: [
+            "Every `Pair` has `print_larger`, and it panics if `T` is wrong",
+            "`print_larger` exists only for `Pair<T>` where `T` can be compared and displayed",
+            "`T` is converted to `String` automatically",
+            "`Pair` can only be created with numbers",
+          ],
+          answer: 1,
+          explain:
+            "The bounds are on the impl block, so the methods inside exist only when `T` satisfies them. A `Pair` of a type with no ordering simply has no `print_larger`.",
+        },
+        {
+          level: 9,
+          q: "Why do we `derive(Debug)` but write `impl Display` by hand?",
+          options: [
+            "`Display` is slower, so it cannot be generated",
+            "`Debug` only works on enums",
+            "The compiler cannot guess how a user-facing message should read",
+            "`Display` needs `unsafe` code",
+          ],
+          answer: 2,
+          explain:
+            "`Debug` output is for developers and has one obvious shape. `Display` is the text users see, so you decide the wording. It also gives you `.to_string()` for free.",
+        },
+        {
+          level: 10,
+          q: "What does `expr?` do when `expr` is `Err(e)`?",
+          options: [
+            "Panics with `e` as the message",
+            "Returns `Err(From::from(e))` from the current function",
+            "Returns `e` unchanged and never converts it",
+            "Retries `expr` once",
+          ],
+          answer: 1,
+          explain:
+            "The hidden step is `From::from(e)`. That is how a `ParseIntError` or a `TodoError` becomes an `AppError` without any manual wrapping.",
+        },
+        {
+          level: 10,
+          q: "In `complete_by_text`, you delete `impl From<TodoError> for AppError`. What happens?",
+          code: "fn complete_by_text(list: &mut TodoList, input: &str) -> Result<(), AppError> {\n    let id = input.parse::<u32>()?;\n    list.complete(id)?;\n    Ok(())\n}",
+          options: [
+            "Everything still compiles, `?` guesses the conversion",
+            "The program compiles but `list.complete` never fails",
+            "Only the `parse` line breaks",
+            "Compile error on `list.complete(id)?` because `TodoError` cannot become `AppError`",
+          ],
+          answer: 3,
+          explain:
+            "`?` needs a `From` impl for each source error type. The `parse` line still works because `From<ParseIntError>` is separate.",
+        },
+        {
+          level: 11,
+          q: "Outside the module, what can code do with `pub struct Todo { id: u32 }` (field not `pub`)?",
+          options: [
+            "Read and write `id` freely",
+            "Read `id` but not write it",
+            "Nothing, the type is hidden too",
+            "Name the type, but not read or set `id` directly",
+          ],
+          answer: 3,
+          explain:
+            "`pub` on the struct only exposes the type name. Each field is private unless it has its own `pub`. This is how you protect rules behind `pub fn` methods.",
+        },
+        {
+          level: 11,
+          q: "In `practice20`, why collect the todo ids into a `Vec` before the `for` loop?",
+          options: [
+            "To make the loop run faster",
+            "Because `for` cannot loop over struct fields",
+            "To avoid holding a borrow of the list while `complete` needs `&mut self`",
+            "Because `u32` is not `Copy`",
+          ],
+          answer: 2,
+          explain:
+            "Looping over `todo_list.items` keeps a borrow alive, and `complete` needs a mutable borrow of the same list. Collecting the ids first ends the first borrow before the loop starts.",
+        },
+        {
+          level: 12,
+          q: "Which traits must `TodoError` have for `assert_eq!(result.err().unwrap(), TodoError::EmptyTitle)` to compile?",
+          options: [
+            "`Clone` and `Copy`",
+            "`Debug` and `PartialEq`",
+            "`Display` and `Default`",
+            "None, `assert_eq!` works on any type",
+          ],
+          answer: 1,
+          explain:
+            "`assert_eq!` compares with `==` (`PartialEq`) and prints both sides when they differ (`Debug`). That is why the enum has `#[derive(Debug, PartialEq)]`.",
+        },
+        {
+          level: 13,
+          q: "In `load`, why does `Err(e) if e.kind() == ErrorKind::NotFound => return Ok(())` treat a missing file as success?",
+          options: [
+            "Because `read_to_string` never fails",
+            "To hide every IO error from the user",
+            "Because `NotFound` cannot be converted to `AppError`",
+            "On the first run `todos.txt` does not exist yet, which is normal, so only other errors are forwarded",
+          ],
+          answer: 3,
+          explain:
+            "Handle the one case you understand and forward the rest with `e.into()`, which uses `From<io::Error>`. A missing file just means an empty list.",
+        },
+      ];
+
+      function richText(text) {
+        return escapeHtml(text).replace(/`([^`]+)`/g, "<code>$1</code>");
+      }
+
+      function renderQuiz() {
+        const root = document.getElementById("quiz");
+        const scoreText = document.getElementById("score-text");
+        let score = 0;
+        let answered = 0;
+        root.innerHTML = "";
+
+        function updateScore() {
+          scoreText.textContent =
+            "Score: " + score + " / " + QUESTIONS.length + " (answered " + answered + ")";
+        }
+
+        QUESTIONS.forEach((item, index) => {
+          const card = document.createElement("div");
+          card.className = "q";
+
+          const head = document.createElement("p");
+          head.className = "q-head";
+          head.innerHTML =
+            '<span class="level">Level ' +
+            item.level +
+            "</span>" +
+            (index + 1) +
+            ". " +
+            richText(item.q);
+          card.appendChild(head);
+
+          if (item.code) {
+            const pre = document.createElement("pre");
+            const code = document.createElement("code");
+            code.innerHTML = highlight(item.code);
+            pre.appendChild(code);
+            card.appendChild(pre);
+          }
+
+          const list = document.createElement("div");
+          list.className = "opts";
+          const buttons = item.options.map((text, optIndex) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.innerHTML = "<strong>" + "ABCD"[optIndex] + ".</strong> " + richText(text);
+            list.appendChild(btn);
+            return btn;
+          });
+          card.appendChild(list);
+
+          const explain = document.createElement("div");
+          explain.className = "explain";
+          explain.hidden = true;
+          card.appendChild(explain);
+
+          buttons.forEach((btn, optIndex) => {
+            btn.addEventListener("click", () => {
+              buttons.forEach((b) => (b.disabled = true));
+              buttons[item.answer].classList.add("correct");
+              const right = optIndex === item.answer;
+              if (right) {
+                score += 1;
+              } else {
+                btn.classList.add("wrong");
+              }
+              answered += 1;
+              explain.innerHTML =
+                "<strong>" + (right ? "Correct. " : "Not quite. ") + "</strong>" + richText(item.explain);
+              explain.hidden = false;
+              updateScore();
+            });
+          });
+
+          root.appendChild(card);
+        });
+
+        updateScore();
+      }
+
+      document.getElementById("quiz-reset").addEventListener("click", renderQuiz);
+      renderQuiz();
+    </script>
+  </body>
+</html>
