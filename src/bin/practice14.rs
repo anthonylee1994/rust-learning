@@ -17,13 +17,13 @@ mod todo {
     }
 
     pub struct Todo {
-        id: u32,
-        title: String,
-        done: bool,
+        pub id: u32,
+        pub title: String,
+        pub done: bool,
     }
 
     pub struct TodoList {
-        items: Vec<Todo>,
+        pub items: Vec<Todo>,
     }
 
     impl TodoList {
@@ -104,5 +104,33 @@ mod tests {
         let result = list.add("".to_string());
         assert!(result.is_err());
         assert_eq!(result.err().unwrap(), TodoError::EmptyTitle);
+    }
+
+    #[test]
+    fn increase_ids() {
+        let mut list = TodoList::new();
+        list.add(String::from("buy groceries")).unwrap();
+        list.add(String::from("read a book")).unwrap();
+        list.add(String::from("write a letter")).unwrap();
+        assert_eq!(list.items[0].id, 1);
+        assert_eq!(list.items[1].id, 2);
+        assert_eq!(list.items[2].id, 3);
+    }
+
+    #[test]
+    fn complete_item_marks_as_done() {
+        let mut list = TodoList::new();
+        list.add(String::from("buy groceries")).unwrap();
+        list.complete(1).unwrap();
+        assert!(list.items[0].done);
+    }
+
+    #[test]
+    fn complete_item_returns_error_if_not_found() {
+        let mut list = TodoList::new();
+        list.add(String::from("buy groceries")).unwrap();
+        let result = list.complete(2);
+        assert!(result.is_err());
+        assert_eq!(result.err().unwrap(), TodoError::NotFound(2));
     }
 }
