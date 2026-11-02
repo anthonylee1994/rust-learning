@@ -1,7 +1,7 @@
 # Rust Learning Progress
 
 Background: TypeScript + Ruby on Rails developer learning Rust.
-Last updated: 2026-11-02 (Round 3 done)
+Last updated: 2026-11-02 (Round 4 done)
 
 ## Round 1: Basics (completed)
 
@@ -49,7 +49,7 @@ Questions for both rounds are in `QUESTIONS.md`.
 
 - `save` uses `File::create`, so a crash halfway leaves a truncated `todos.txt` (fix idea: write a temp file, then `rename`).
 - `add` makes the id from `len() + 1`, which would clash if delete is ever added.
-- Todo code is copied between practice files; a shared `src/lib.rs` would remove the duplication.
+- Old practice files (10 to 15) still carry their own copy of the todo code; only practice20 uses `src/lib.rs`.
 - Think-about answers for practice14 (`pub` privacy error, `use super::...`) are still not answered.
 
 ## Round 3: Traits, errors, modules, tests, CLI (completed)
@@ -66,6 +66,20 @@ Questions are in `QUESTIONS.md`.
 
 Watch points from earlier rounds: finish every bullet of an exercise before review (skipped `list`, `any`/`all`, `collect` before), and give `ok_or` the error itself, not `Err(...)`.
 
-Next: Round 4 (not planned yet). Candidates: `serde` / `clap`, shared `lib.rs`, generics, then lifetimes.
+## Round 4: Easy ones (completed)
+
+Questions are in `QUESTIONS.md`.
+
+| #   | Topic                        | File            | Status | Notes                                                                                                                         |
+| --- | ---------------------------- | --------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| 16  | `derive`, `if let`, `Option` | `practice16.rs` | Done   | `Option<&User>` with two ref params needs a lifetime, so returned `Option<User>` via `.cloned()`. Compare with `==` before move |
+| 17  | `HashMap` (word count)       | `practice17.rs` | Done   | `*map.entry(w).or_insert(0) += 1`, `.iter().collect()` into `Vec<(&String, &usize)>`, `sort_by`. Keep the map in a variable   |
+| 18  | Generics                     | `practice18.rs` | Done   | `largest<T: PartialOrd + Copy>`, `Pair<T>`. Tested `i32`, `f64`, `&str` (not `char`)                                          |
+| 19  | Trait default method         | `practice19.rs` | Done   | `intro` default uses `name()` / `speak()`, `Dog` overrides. Default text reads oddly for `Cat` ("I'm a meow")                 |
+| 20  | Shared `src/lib.rs`          | `practice20.rs` | Done   | `use rust_learning::{...}`, 4 tests moved to `lib.rs` (`cargo test`). Fixed E0499 by collecting ids before the loop           |
+
+New concepts: `#[derive(Debug, Clone, PartialEq)]`, `if let` vs `match`, `HashMap` and `entry`, generics with trait bounds, default trait methods, `lib.rs` shared by `src/bin/*`, E0499 (cannot borrow mutably twice, collect first then mutate).
+
+Next: Round 5 (not planned yet). Candidates: `serde` / `clap`, `impl Trait` and closures, then lifetimes.
 
 Reminders: avoid lifetimes and `async` for now, and `.clone()` freely when stuck.
