@@ -211,6 +211,56 @@ Stuck points to expect: `args().collect::<Vec<String>>()`, matching on a slice (
 
 **Think about**: what happens to your data if the process crashes halfway through `save`? You do not need to fix it, just note it.
 
+## Round 4: Easy ones (derive, HashMap, generics, `if let`, `lib.rs`)
+
+Each one is short. One concept per file.
+
+## practice16: `derive` and `Option` helpers
+
+Make a `struct User { name: String, age: u32 }` with `#[derive(Debug, Clone, PartialEq)]`.
+
+- In `main`, create two users with the same data and check `==`.
+- Print one with `{:?}` and `{:#?}`.
+- Write `find_user(users: &[User], name: &str) -> Option<User>`. Return a clone (`.cloned()` on the `find` result), so no lifetime is needed.
+- Use `if let Some(u) = ...` for the found case, and `.map(|u| u.age).unwrap_or(0)` for the missing case.
+
+**Think about**: when do you pick `if let` over a full `match`?
+
+## practice17: `HashMap` (word count)
+
+Write `count_words(text: &str) -> HashMap<String, usize>`.
+
+- Split with `split_whitespace()`, lowercase each word.
+- Use `*map.entry(word).or_insert(0) += 1;`.
+- In `main`, count `"the cat and the dog and the bird"` and print the result sorted by count (descending). Collect into a `Vec<(&String, &usize)>` first, then `sort_by`.
+
+**Think about**: what is the Rails or TS equivalent of `entry().or_insert()`?
+
+## practice18: Generics
+
+- Write `fn largest<T: PartialOrd + Copy>(items: &[T]) -> Option<T>`. Test with `i32`, `f64` and `char`.
+- Write `struct Pair<T> { a: T, b: T }` with `impl<T: PartialOrd + std::fmt::Display> Pair<T>` and a method `print_larger(&self)`.
+
+**Think about**: what does the compiler say if you remove `Copy` from the bound? Read the error fully.
+
+## practice19: Trait with a default method
+
+- `trait Animal { fn name(&self) -> String; fn speak(&self) -> String; fn intro(&self) -> String { ... } }`, where `intro` has a default body that uses `name()` and `speak()`.
+- Implement it for `Dog` and `Cat`. Override `intro` for only one of them.
+- Put both into a `Vec<Box<dyn Animal>>` and print every `intro()`.
+
+**Think about**: how is this different from an abstract class in Ruby or TS?
+
+## practice20: Shared `src/lib.rs`
+
+Fix the loose end that the todo code is copied around.
+
+- Create `src/lib.rs` and move `Todo`, `TodoList`, `TodoError` into it (all `pub`).
+- In a new `src/bin/practice20.rs`, use it with `use rust_learning::{TodoList, TodoError};` (check the crate name in `Cargo.toml`, `-` becomes `_`).
+- Move your 4 tests from practice14 into `lib.rs`, run with `cargo test`.
+
+**Think about**: why can binaries in `src/bin/` import from `lib.rs` but not from each other?
+
 ## Reminders
 
 - No lifetimes or `async` yet. If the compiler asks for a lifetime, switch the parameter to `String` or `.clone()`.
