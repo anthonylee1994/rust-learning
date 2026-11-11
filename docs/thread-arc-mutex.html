@@ -1,0 +1,1360 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rust: thread, Arc and Mutex (with exercises)</title>
+    <style>
+      :root {
+        --bg: #fafaf9;
+        --fg: #1c1917;
+        --muted: #57534e;
+        --accent: #c2410c;
+        --card: #ffffff;
+        --border: #e7e5e4;
+        --code-bg: #1c1917;
+        --code-fg: #f5f5f4;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        line-height: 1.65;
+      }
+      main {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 48px 24px 96px;
+      }
+      h1 {
+        font-size: 2.2rem;
+        margin: 0 0 8px;
+      }
+      h2 {
+        margin-top: 56px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--accent);
+      }
+      h3 {
+        margin-top: 32px;
+      }
+      .lead {
+        color: var(--muted);
+        font-size: 1.1rem;
+      }
+      .level {
+        display: inline-block;
+        background: var(--accent);
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        padding: 2px 10px;
+        border-radius: 999px;
+        vertical-align: middle;
+        margin-right: 8px;
+      }
+      .file {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin: 20px 0 -8px;
+      }
+      nav {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px 20px;
+        margin: 24px 0;
+      }
+      nav a {
+        margin-right: 16px;
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      pre {
+        background: var(--code-bg);
+        color: var(--code-fg);
+        padding: 16px 20px;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+      pre.out {
+        background: #292524;
+        border-left: 4px solid #84cc16;
+        color: #d6d3d1;
+        margin-top: -8px;
+      }
+      code {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      }
+      p code,
+      li code,
+      td code {
+        background: #f5f5f4;
+        border: 1px solid var(--border);
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 0.88em;
+      }
+      .callout {
+        background: #fff7ed;
+        border-left: 4px solid var(--accent);
+        padding: 12px 18px;
+        border-radius: 4px;
+        margin: 20px 0;
+      }
+      .callout strong:first-child {
+        color: var(--accent);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--card);
+        border: 1px solid var(--border);
+        margin: 16px 0;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+      th {
+        background: #f5f5f4;
+      }
+      .cmt {
+        color: #8b8680;
+        font-style: italic;
+      }
+      .tok-kw {
+        color: #c084fc;
+      }
+      .tok-str {
+        color: #86efac;
+      }
+      .tok-type {
+        color: #67e8f9;
+      }
+      .tok-fn {
+        color: #fde047;
+      }
+      .tok-macro {
+        color: #f9a8d4;
+      }
+      .tok-num {
+        color: #fdba74;
+      }
+      .tok-attr {
+        color: #a5b4fc;
+      }
+      .score {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 18px;
+        font-weight: 700;
+        margin: 16px 0;
+      }
+      .score button {
+        font: inherit;
+        font-weight: 600;
+        background: var(--accent);
+        color: #fff;
+        border: 0;
+        border-radius: 6px;
+        padding: 4px 14px;
+        cursor: pointer;
+      }
+      .q {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px 20px 8px;
+        margin: 18px 0;
+      }
+      .q-head {
+        font-weight: 700;
+        margin: 0 0 8px;
+      }
+      .q-head .level {
+        font-size: 0.7rem;
+      }
+      .q pre {
+        margin: 8px 0 12px;
+      }
+      .opts {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 12px;
+      }
+      .opts button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        font: inherit;
+        background: #fafaf9;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px 14px;
+        margin: 6px 0;
+        cursor: pointer;
+      }
+      .opts button:hover:not(:disabled) {
+        border-color: var(--accent);
+        background: #fff7ed;
+      }
+      .opts button:disabled {
+        cursor: default;
+        color: inherit;
+      }
+      .opts button.correct {
+        background: #dcfce7;
+        border-color: #16a34a;
+      }
+      .opts button.wrong {
+        background: #fee2e2;
+        border-color: #dc2626;
+      }
+      .explain {
+        border-left: 4px solid var(--accent);
+        background: #fff7ed;
+        padding: 8px 14px;
+        border-radius: 4px;
+        margin: 0 0 12px;
+      }
+      .task {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-left: 4px solid #2563eb;
+        border-radius: 10px;
+        padding: 14px 20px 8px;
+        margin: 18px 0;
+      }
+      .task-head {
+        font-weight: 700;
+        margin: 0 0 8px;
+      }
+      .task-head .level {
+        background: #2563eb;
+        font-size: 0.7rem;
+      }
+      .task-head code {
+        font-weight: 400;
+        color: var(--muted);
+        margin-left: 6px;
+      }
+      details {
+        margin: 8px 0 12px;
+        background: #f5f5f4;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px 14px;
+      }
+      summary {
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>
+        Rust: <code>thread</code>, <code>Arc</code> and <code>Mutex</code>
+      </h1>
+      <p class="lead">
+        How to run work on several threads and share data between them safely.
+        The demo code below was compiled and run for real, and the output shown
+        is what it printed. Then you write six exercises yourself in
+        <code>src/bin/practice21.rs</code> to <code>practice26.rs</code>.
+      </p>
+
+      <nav>
+        <a href="#plan">Roadmap</a>
+        <a href="#l1">Level 1: spawn + join</a>
+        <a href="#l2">Level 2: move</a>
+        <a href="#l3">Level 3: Mutex</a>
+        <a href="#l4">Level 4: Arc</a>
+        <a href="#l5">Level 5: Arc + Mutex</a>
+        <a href="#l6">Level 6: lock scope</a>
+        <a href="#ex">Exercises</a>
+        <a href="#quiz">Review quiz</a>
+      </nav>
+
+      <!-- ============ ROADMAP ============ -->
+      <h2 id="plan">Roadmap</h2>
+      <div class="callout">
+        <strong>Mental model (TypeScript / Rails):</strong>
+        Node runs your JS on one thread, so two callbacks never touch a variable
+        at the same instant. Rails mostly dodges the problem with separate
+        processes, and Ruby's GVL protects you inside one process. Rust has real
+        threads running at the same time with no global lock, so the
+        <strong>compiler</strong> is the one that stops data races.
+        <code>thread</code> starts the work, <code>Mutex</code> makes sure one
+        thread at a time touches the data, and <code>Arc</code> lets many
+        threads own that data.
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Level</th>
+            <th>Concept</th>
+            <th>Problem it solves</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><code>thread::spawn</code> and <code>join</code></td>
+            <td>Run work in the background and wait for it</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><code>move</code> closures and return values</td>
+            <td>Give a thread its own data and get a result back</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><code>Mutex&lt;T&gt;</code></td>
+            <td>Only one thread may read or write the data at a time</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><code>Arc&lt;T&gt;</code></td>
+            <td>Many owners of one value, across threads</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td><code>Arc&lt;Mutex&lt;T&gt;&gt;</code></td>
+            <td>Many threads that all change the same value</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td>Lock scope, poisoning, deadlock</td>
+            <td>Use the combo without making it slow or stuck</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ============ LEVEL 1 ============ -->
+      <h2 id="l1"><span class="level">Level 1</span>thread::spawn and join</h2>
+      <p>
+        <code>thread::spawn</code> takes a closure and runs it on a new thread
+        right away. It returns a <code>JoinHandle</code>. Calling
+        <code>.join()</code> on it means "wait until that thread is done". Think
+        of it as <code>await</code> for a thread: without it,
+        <code>main</code> may end first and kill the worker.
+      </p>
+
+      <p class="file">demo 1: spawn and join</p>
+      <pre><code>use std::thread;
+use std::time::Duration;
+
+fn main() {
+    let handle = thread::spawn(|| {
+        for i in 1..=3 {
+            println!("worker: step {}", i);
+            thread::sleep(Duration::from_millis(10));
+        }
+    });
+
+    handle.join().unwrap();
+    println!("main: worker finished");
+}</code></pre>
+      <pre class="out"><code>worker: step 1
+worker: step 2
+worker: step 3
+main: worker finished</code></pre>
+
+      <h3>What to notice</h3>
+      <ul>
+        <li>
+          <code>join()</code> returns a <code>Result</code>. It is
+          <code>Err</code> if the thread <strong>panicked</strong>. The panic
+          does not crash <code>main</code>, you get to decide. Here we
+          <code>unwrap</code> because this is a learning project.
+        </li>
+        <li>
+          The output order above is stable only because we join before the last
+          <code>println!</code>. If two threads print at the same time, the
+          order is not fixed and can change on every run.
+        </li>
+        <li>
+          Forget the <code>join</code> and the program may exit before the
+          worker prints anything. That is a classic first surprise.
+        </li>
+      </ul>
+
+      <!-- ============ LEVEL 2 ============ -->
+      <h2 id="l2">
+        <span class="level">Level 2</span>move closures and return values
+      </h2>
+      <p>
+        A new thread may live longer than the function that created it, so it
+        cannot
+        <em>borrow</em> local variables. It must <em>own</em> what it uses. The
+        <code>move</code> keyword in front of the closure moves the variables
+        in. The closure's return value comes back through <code>join()</code>.
+      </p>
+
+      <p class="file">demo 2: move in, result out</p>
+      <pre><code>use std::thread;
+
+fn main() {
+    let data = vec![1, 2, 3, 4, 5];
+
+    // `move` hands ownership of `data` to the new thread.
+    let handle = thread::spawn(move || data.iter().sum::&lt;i32&gt;());
+    println!("sum from worker: {}", handle.join().unwrap());
+
+    let mut handles = vec![];
+    for i in 1..=4 {
+        handles.push(thread::spawn(move || i * i));
+    }
+
+    let squares: Vec&lt;i32&gt; = handles.into_iter().map(|h| h.join().unwrap()).collect();
+    println!("squares: {:?}", squares);
+}</code></pre>
+      <pre class="out"><code>sum from worker: 15
+squares: [1, 4, 9, 16]</code></pre>
+
+      <h3>The error you will hit first</h3>
+      <p>Remove <code>move</code> and the compiler stops you:</p>
+      <pre><code>let data = vec![1, 2, 3];
+let handle = thread::spawn(|| {
+    println!("{:?}", data);
+});</code></pre>
+      <pre
+        class="out"
+      ><code>error[E0373]: closure may outlive the current function, but it borrows `data`,
+              which is owned by the current function
+help: to force the closure to take ownership of `data` (and any other
+      referenced variables), use the `move` keyword</code></pre>
+
+      <ul>
+        <li>
+          <strong>Why:</strong> if <code>main</code> dropped
+          <code>data</code> while the thread still ran, the thread would read
+          freed memory. Rust refuses at compile time. In TypeScript this is just
+          a possible bug, in Rust it is an error.
+        </li>
+        <li>
+          <strong>Result:</strong> after <code>move</code>,
+          <code>data</code> belongs to the thread. <code>main</code> cannot use
+          it any more (Round 1 ownership, same rule).
+        </li>
+        <li>
+          <strong>Loop trick:</strong> <code>for i in 1..=4</code> with
+          <code>move</code> gives each thread its own copy of <code>i</code>,
+          because integers are <code>Copy</code>.
+        </li>
+        <li>
+          <strong>Collect handles first, join later.</strong> Joining inside the
+          spawn loop would run the threads one by one, which defeats the point.
+        </li>
+      </ul>
+
+      <!-- ============ LEVEL 3 ============ -->
+      <h2 id="l3">
+        <span class="level">Level 3</span>Mutex: one thread at a time
+      </h2>
+      <p>
+        <code>Mutex</code> means "mutual exclusion". It is a box with one key.
+        To touch the value inside you must call <code>.lock()</code>, which
+        waits for the key and gives you a <em>guard</em>. When the guard is
+        dropped, the key goes back. Ruby has <code>Mutex#synchronize</code>, but
+        in Ruby the data lives outside the mutex and you can forget to lock. In
+        Rust <strong>the data lives inside the Mutex</strong>, so forgetting is
+        impossible.
+      </p>
+
+      <p class="file">demo 3: Mutex on one thread (to learn the API)</p>
+      <pre><code>use std::sync::Mutex;
+
+fn main() {
+    let counter = Mutex::new(0);
+
+    {
+        let mut guard = counter.lock().unwrap();
+        *guard += 1;
+        *guard += 1;
+    } // guard dropped here, lock released
+
+    println!("counter = {}", *counter.lock().unwrap());
+}</code></pre>
+      <pre class="out"><code>counter = 2</code></pre>
+
+      <h3>What to notice</h3>
+      <ul>
+        <li>
+          <code>lock()</code> returns a <code>Result</code> (see "poisoning" in
+          Level 6), so we <code>unwrap()</code> it. The guard acts like a
+          <code>&amp;mut i32</code>, so we write <code>*guard += 1</code>.
+        </li>
+        <li>
+          Note <code>let counter</code> is <strong>not</strong>
+          <code>mut</code>. A <code>Mutex</code> lets you change the inside
+          through a shared reference. This is called
+          <em>interior mutability</em>: the lock, not <code>mut</code>, is the
+          safety check.
+        </li>
+        <li>
+          The guard is released at the end of the scope (RAII, like a Ruby
+          <code>ensure</code> that runs for you). The inner
+          <code>{ }</code> block makes that moment explicit.
+        </li>
+      </ul>
+
+      <!-- ============ LEVEL 4 ============ -->
+      <h2 id="l4">
+        <span class="level">Level 4</span>Arc: many owners across threads
+      </h2>
+      <p>
+        Ownership says one owner per value. But several threads may need the
+        same data, and a thread needs to <em>own</em> what it holds (Level 2).
+        <code>Arc</code> solves this: it is a pointer with a
+        <strong>counter</strong>. Each <code>Arc::clone</code> adds one owner.
+        The value is freed when the last owner goes away. Arc stands for
+        "atomically reference counted".
+      </p>
+
+      <p class="file">demo 4: watch the counter</p>
+      <pre><code>use std::sync::Arc;
+
+fn main() {
+    let name = Arc::new(String::from("shared text"));
+    println!("count = {}", Arc::strong_count(&amp;name));
+
+    let other = Arc::clone(&amp;name);
+    println!("count after clone = {}", Arc::strong_count(&amp;name));
+
+    {
+        let _third = Arc::clone(&amp;name);
+        println!("count in inner scope = {}", Arc::strong_count(&amp;name));
+    }
+
+    println!("count after scope = {}", Arc::strong_count(&amp;name));
+    println!("other sees: {}", other);
+}</code></pre>
+      <pre class="out"><code>count = 1
+count after clone = 2
+count in inner scope = 3
+count after scope = 2
+other sees: shared text</code></pre>
+
+      <h3>What to notice</h3>
+      <ul>
+        <li>
+          <code>Arc::clone(&amp;name)</code> copies only the
+          <strong>pointer</strong> and bumps the count. The
+          <code>String</code> is not copied. This is the "clone only when two
+          owners are really needed" case from your notes, and it is cheap.
+        </li>
+        <li>
+          Prefer writing <code>Arc::clone(&amp;x)</code> over
+          <code>x.clone()</code>, so a reader sees at once that this is a cheap
+          pointer copy.
+        </li>
+        <li>
+          The inner scope shows the count going back down when
+          <code>_third</code> is dropped. There is no garbage collector pause:
+          it is counted exactly.
+        </li>
+        <li>
+          <strong>Alone, <code>Arc</code> is read-only.</strong> You cannot
+          change the value inside. For that you need Level 5.
+        </li>
+      </ul>
+
+      <h3>Why not <code>Rc</code>?</h3>
+      <p>
+        <code>Rc</code> is the same idea, but its counter is not thread safe, so
+        it is faster. Rust knows this and refuses to send an <code>Rc</code> to
+        a thread:
+      </p>
+      <pre><code>let data = Rc::new(5);
+let handle = thread::spawn(move || {
+    println!("{}", data);
+});</code></pre>
+      <pre
+        class="out"
+      ><code>error[E0277]: `Rc&lt;i32&gt;` cannot be sent between threads safely
+  = help: within `{closure}`, the trait `Send` is not implemented for `Rc&lt;i32&gt;`</code></pre>
+      <div class="callout">
+        <strong>Send in one line:</strong> <code>Send</code> is a marker trait
+        meaning "this type is safe to move to another thread".
+        <code>thread::spawn</code> requires it. You never write it yourself, the
+        compiler works it out. <strong>Rule:</strong> in threads use
+        <code>Arc</code>, in single-threaded code use <code>Rc</code>.
+      </div>
+
+      <!-- ============ LEVEL 5 ============ -->
+      <h2 id="l5">
+        <span class="level">Level 5</span>Arc&lt;Mutex&lt;T&gt;&gt;: the
+        standard combo
+      </h2>
+      <p>
+        Put them together. <code>Arc</code> gives every thread ownership,
+        <code>Mutex</code>
+        lets them change the value one at a time. This is the Rust version of "a
+        shared counter protected by a lock".
+      </p>
+
+      <p class="file">demo 5: 8 threads, each adds 1000</p>
+      <pre><code>use std::sync::{Arc, Mutex};
+use std::thread;
+
+fn main() {
+    let counter = Arc::new(Mutex::new(0));
+    let mut handles = vec![];
+
+    for _ in 0..8 {
+        let counter = Arc::clone(&amp;counter);
+        handles.push(thread::spawn(move || {
+            for _ in 0..1000 {
+                *counter.lock().unwrap() += 1;
+            }
+        }));
+    }
+
+    for h in handles {
+        h.join().unwrap();
+    }
+
+    println!("final counter = {}", *counter.lock().unwrap());
+}</code></pre>
+      <pre class="out"><code>final counter = 8000</code></pre>
+
+      <h3>What to notice</h3>
+      <ul>
+        <li>
+          <strong>The result is always 8000.</strong> Without the lock, two
+          threads can read the same number, both add one, and write back, losing
+          an update. That is a data race, and Rust will not compile the
+          unprotected version.
+        </li>
+        <li>
+          <code>let counter = Arc::clone(&amp;counter);</code> inside the loop
+          is <strong>shadowing</strong>. Each thread gets its own
+          <code>Arc</code> pointer, and the <code>move</code> closure takes that
+          one. The outer <code>counter</code> stays in <code>main</code>.
+        </li>
+        <li>
+          <code>*counter.lock().unwrap() += 1</code> is a one-liner: lock,
+          change, and the guard is dropped at the end of the statement.
+        </li>
+      </ul>
+
+      <h3>The error that shows why Arc is needed</h3>
+      <p>
+        Try the same loop with a bare <code>Mutex</code> and no
+        <code>Arc</code>:
+      </p>
+      <pre class="out"><code>error[E0382]: use of moved value: `counter`
+  |     let counter = Mutex::new(0);
+  |         ------- move occurs because `counter` has type `Mutex&lt;i32&gt;`,
+  |                 which does not implement the `Copy` trait
+  |     for _ in 0..2 {
+  |     ------------- inside of this loop
+  |         handles.push(thread::spawn(move || {
+  |                                    ^^^^^^^ value moved into closure here,
+  |                                            in previous iteration of loop</code></pre>
+      <p>
+        The first thread takes the only <code>Mutex</code>, so the second loop
+        round has nothing to give. <code>Arc</code> is how you hand out several
+        owners.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>You need</th>
+            <th>Use</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Run work in the background</td>
+            <td><code>thread::spawn</code> + <code>join</code></td>
+          </tr>
+          <tr>
+            <td>Many threads read the same data</td>
+            <td><code>Arc&lt;T&gt;</code></td>
+          </tr>
+          <tr>
+            <td>Many threads change the same data</td>
+            <td><code>Arc&lt;Mutex&lt;T&gt;&gt;</code></td>
+          </tr>
+          <tr>
+            <td>One thread changes it, with no sharing</td>
+            <td>Plain <code>move</code>, no lock needed</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ============ LEVEL 6 ============ -->
+      <h2 id="l6"><span class="level">Level 6</span>keep the lock short</h2>
+      <p>
+        While a thread holds the guard, every other thread that calls
+        <code>lock()</code> waits. So the goal is:
+        <strong
+          >do the slow work outside, hold the lock only for the quick
+          update</strong
+        >.
+      </p>
+
+      <p class="file">demo 6: collect results from threads</p>
+      <pre><code>use std::sync::{Arc, Mutex};
+use std::thread;
+
+fn main() {
+    let results = Arc::new(Mutex::new(Vec::new()));
+    let mut handles = vec![];
+
+    for id in 1..=4 {
+        let results = Arc::clone(&amp;results);
+        handles.push(thread::spawn(move || {
+            // Do the slow work first, without holding the lock.
+            let value = id * 10;
+
+            // Hold the lock only for the short push.
+            let mut list = results.lock().unwrap();
+            list.push((id, value));
+        }));
+    }
+
+    for h in handles {
+        h.join().unwrap();
+    }
+
+    let mut list = results.lock().unwrap();
+    list.sort(); // thread order is not fixed, so sort before printing
+    println!("{:?}", *list);
+}</code></pre>
+      <pre class="out"><code>[(1, 10), (2, 20), (3, 30), (4, 40)]</code></pre>
+
+      <h3>What to notice</h3>
+      <ul>
+        <li>
+          <code>value</code> is computed <em>before</em> <code>lock()</code>. If
+          that line were a slow network call, the threads would still run in
+          parallel.
+        </li>
+        <li>
+          The threads push in any order, so the code <code>sort()</code>s before
+          printing. Never depend on thread order.
+        </li>
+        <li>
+          Want to release early inside a long function? Use an inner
+          <code>{ }</code> block or <code>drop(guard)</code>.
+        </li>
+      </ul>
+
+      <h3>Two traps</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Trap</th>
+            <th>What happens</th>
+            <th>How to avoid</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Deadlock</strong></td>
+            <td>
+              A thread locks the same <code>Mutex</code> twice without dropping
+              the first guard, or two threads lock A and B in opposite order.
+              Everything hangs, with no error.
+            </td>
+            <td>
+              Hold one lock at a time, keep scopes small, lock in the same order
+              everywhere
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Poisoning</strong></td>
+            <td>
+              A thread panics while holding the guard. The next
+              <code>lock()</code> returns <code>Err</code>, to warn you the data
+              may be half-updated. That is why <code>lock()</code> returns a
+              <code>Result</code>.
+            </td>
+            <td>
+              <code>unwrap()</code> is fine for exercises. Real code decides
+              whether to recover or crash.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <strong>Not covered yet (good for later rounds):</strong>
+        <code>RwLock</code> (many readers or one writer),
+        <code>mpsc::channel</code> (send messages between threads instead of
+        sharing data, often cleaner than a lock),
+        <code>thread::scope</code> (borrow locals without <code>move</code> and
+        <code>Arc</code>), and <code>async</code>. Master this page first.
+      </div>
+
+      <!-- ============ EXERCISES ============ -->
+      <h2 id="ex">Exercises</h2>
+      <p>
+        You write the code, I run and review it. One file per exercise, run with
+        <code>cargo run --bin practiceN</code>. Each has its own
+        <code>main</code> and prints visible output. Read the full compiler
+        error before asking for help, and use <code>.clone()</code> freely when
+        stuck. Open the hints only after a real try.
+      </p>
+
+      <div class="task">
+        <p class="task-head">
+          <span class="level">Exercise 1</span>spawn and join
+          <code>practice21.rs</code>
+        </p>
+        <ul>
+          <li>
+            Spawn 3 threads in a loop. Thread <code>i</code> prints
+            <code>hello from thread i</code>.
+          </li>
+          <li>
+            Keep every <code>JoinHandle</code> in a <code>Vec</code>, then join
+            them all.
+          </li>
+          <li>
+            After the joins, print <code>all done</code> from <code>main</code>.
+          </li>
+        </ul>
+        <p>
+          <strong>Expected:</strong> three <code>hello</code> lines in
+          <em>any</em> order, then <code>all done</code> last. Run it a few
+          times and see if the order changes.
+        </p>
+        <details>
+          <summary>Hint</summary>
+          <p>
+            Use <code>for i in 1..=3</code> and <code>move ||</code>. If you
+            join inside the spawn loop, the lines come out in a fixed order but
+            the threads are not running together. Why?
+          </p>
+        </details>
+      </div>
+
+      <div class="task">
+        <p class="task-head">
+          <span class="level">Exercise 2</span>return values
+          <code>practice22.rs</code>
+        </p>
+        <ul>
+          <li>Make a <code>Vec&lt;u32&gt;</code> of <code>1..=100</code>.</li>
+          <li>
+            Split it into 4 chunks of 25. Give each chunk to its own thread,
+            which returns the sum of its chunk.
+          </li>
+          <li>
+            In <code>main</code>, join all threads, print each partial sum, then
+            print the total.
+          </li>
+        </ul>
+        <p>
+          <strong>Expected:</strong> partial sums <code>325</code>,
+          <code>950</code>, <code>1575</code>, <code>2200</code>, and total
+          <code>5050</code>.
+        </p>
+        <details>
+          <summary>Hint</summary>
+          <p>
+            <code>numbers.chunks(25)</code> gives borrowed slices, and a thread
+            cannot borrow (Level 2). Turn each slice into an owned
+            <code>Vec</code> with <code>.to_vec()</code> before
+            <code>spawn</code>. Joining in order keeps the partial sums in
+            order.
+          </p>
+        </details>
+      </div>
+
+      <div class="task">
+        <p class="task-head">
+          <span class="level">Exercise 3</span>fix 3 compile errors
+          <code>practice23.rs</code>
+        </p>
+        <p>
+          Make one file with three small broken programs, one per function. Run
+          each one on its own, read the whole error, then fix it.
+        </p>
+        <ul>
+          <li>
+            <code>fn a()</code>: a thread uses a <code>Vec</code> without
+            <code>move</code>.
+          </li>
+          <li><code>fn b()</code>: a thread uses an <code>Rc</code>.</li>
+          <li>
+            <code>fn c()</code>: a <code>Mutex</code> is moved into a thread
+            inside a loop, with no <code>Arc</code>.
+          </li>
+        </ul>
+        <p>
+          <strong>Expected:</strong> before the fix you can name the error code
+          and say why it happens in one sentence. After the fix all three print
+          something.
+        </p>
+        <details>
+          <summary>Hint</summary>
+          <p>
+            The three codes are <code>E0373</code>, <code>E0277</code> and
+            <code>E0382</code>, which are exactly the three errors on this page.
+            Comment out two functions in <code>main</code> so only one error
+            shows at a time.
+          </p>
+        </details>
+      </div>
+
+      <div class="task">
+        <p class="task-head">
+          <span class="level">Exercise 4</span>watch the Arc counter
+          <code>practice24.rs</code>
+        </p>
+        <ul>
+          <li>
+            Create <code>Arc::new(vec![1, 2, 3])</code> and print
+            <code>Arc::strong_count</code> (expect 1).
+          </li>
+          <li>
+            Spawn 3 threads, each with its own <code>Arc::clone</code>. Each
+            thread prints the sum of the vec.
+          </li>
+          <li>Join all threads, then print the count again.</li>
+        </ul>
+        <p>
+          <strong>Expected:</strong> count is <code>1</code> at the start and
+          <code>1</code> at the end, and three lines with sum <code>6</code> in
+          between.
+        </p>
+        <details>
+          <summary>Hint</summary>
+          <p>
+            Do not print the count while threads run, because it changes as
+            threads finish and the result is not fixed. Why is it back to 1
+            after <code>join</code>? Think about what happens to a closure when
+            its thread ends.
+          </p>
+        </details>
+      </div>
+
+      <div class="task">
+        <p class="task-head">
+          <span class="level">Exercise 5</span>bank account
+          <code>practice25.rs</code>
+        </p>
+        <ul>
+          <li>
+            Shared balance: <code>Arc&lt;Mutex&lt;i64&gt;&gt;</code>, starting
+            at 100.
+          </li>
+          <li>5 threads each deposit 10.</li>
+          <li>
+            3 threads each withdraw 20, but <strong>only if</strong> the balance
+            is at least 20. Otherwise print <code>insufficient funds</code>.
+          </li>
+          <li>Join everything and print the final balance.</li>
+        </ul>
+        <p>
+          <strong>Expected:</strong> final balance <code>90</code> (100 + 50 -
+          60), on every run.
+        </p>
+        <details>
+          <summary>Hint</summary>
+          <p>
+            The check and the withdraw must happen under the
+            <strong>same</strong> guard. If you lock to check, release, then
+            lock again to subtract, another thread can sneak in between. Store
+            the guard in a variable:
+            <code>let mut balance = account.lock().unwrap();</code>
+          </p>
+        </details>
+      </div>
+
+      <div class="task">
+        <p class="task-head">
+          <span class="level">Exercise 6</span>parallel word count
+          <code>practice26.rs</code>
+        </p>
+        <ul>
+          <li>
+            Shared map:
+            <code>Arc&lt;Mutex&lt;HashMap&lt;String, usize&gt;&gt;&gt;</code>.
+          </li>
+          <li>
+            Three lines of text: <code>"a b a"</code>, <code>"b c"</code>,
+            <code>"a c c"</code>. One thread per line, each counting its words
+            into the shared map.
+          </li>
+          <li>
+            After joining, collect the map into a <code>Vec</code>, sort by
+            word, and print one <code>word: count</code> per line.
+          </li>
+        </ul>
+        <p>
+          <strong>Expected:</strong> <code>a: 3</code>, <code>b: 2</code>,
+          <code>c: 3</code>, in that order.
+        </p>
+        <details>
+          <summary>Hint</summary>
+          <p>
+            This is <code>practice17</code> (<code>entry</code> +
+            <code>or_insert</code>) inside a lock. Lock once per word, or lock
+            once per line and hold the guard for the whole loop. Which one is
+            better, and which one is more obviously correct? Convert
+            <code>&amp;str</code> to <code>String</code> for the key. Sort
+            before printing, because thread order is random.
+          </p>
+        </details>
+      </div>
+
+      <!-- ============ QUIZ ============ -->
+      <h2 id="quiz">Review quiz</h2>
+      <p>
+        12 multiple-choice questions, ordered like the levels above. Click an
+        answer to see if you are right and read why. Try to answer before
+        scrolling back up.
+      </p>
+
+      <div class="score" id="score" aria-live="polite">
+        <span id="score-text">Score: 0 / 12</span>
+        <button type="button" id="quiz-reset">Reset</button>
+      </div>
+
+      <div id="quiz"></div>
+
+      <div class="callout">
+        <strong>Next step:</strong> take Exercise 5, start 10 withdrawing
+        threads, and split the check from the withdraw (read the balance,
+        release the guard, lock again to subtract). It is a race, so it may need
+        many runs, but the balance can go below zero. Then put it back under one
+        guard and see it hold every time.
+      </div>
+    </main>
+
+    <script>
+      // Tiny Rust syntax highlighter, no external dependency
+      const KEYWORDS =
+        "fn|struct|impl|trait|for|let|mut|use|pub|self|Self|where|match|if|else|return|enum|dyn|as|in|loop|while|const|static|mod|ref|move";
+      const PRIMITIVES =
+        "u8|u16|u32|u64|usize|i8|i16|i32|i64|isize|f32|f64|bool|char|str";
+
+      const TOKEN_RE = new RegExp(
+        [
+          "(?<cmt>//[^\\n]*)",
+          '(?<str>"(?:\\\\.|[^"\\\\])*")',
+          "(?<attr>#\\[[^\\]]*\\])",
+          "(?<kw>\\b(?:" + KEYWORDS + ")\\b)",
+          "(?<macro>\\b[a-z_][a-z0-9_]*!)",
+          "(?<num>\\b\\d[\\d_]*(?:\\.\\d+)?\\b)",
+          "(?<type>\\b(?:" + PRIMITIVES + ")\\b|\\b[A-Z][A-Za-z0-9_]*\\b)",
+          "(?<fn>\\b[a-z_][a-z0-9_]*(?=\\s*(?:::<[^>]*>)?\\())",
+        ].join("|"),
+        "g",
+      );
+
+      function escapeHtml(text) {
+        return text
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function highlight(source) {
+        let out = "";
+        let last = 0;
+        for (const m of source.matchAll(TOKEN_RE)) {
+          out += escapeHtml(source.slice(last, m.index));
+          const kind = Object.keys(m.groups).find(
+            (key) => m.groups[key] !== undefined,
+          );
+          const cls = kind === "cmt" ? "cmt" : "tok-" + kind;
+          out += '<span class="' + cls + '">' + escapeHtml(m[0]) + "</span>";
+          last = m.index + m[0].length;
+        }
+        return out + escapeHtml(source.slice(last));
+      }
+
+      // Skip program output blocks, they are plain text
+      document.querySelectorAll("pre:not(.out) code").forEach((block) => {
+        block.innerHTML = highlight(block.textContent);
+      });
+
+      const QUESTIONS = [
+        {
+          level: 1,
+          q: "What does `handle.join().unwrap()` do?",
+          options: [
+            "Starts the thread",
+            "Waits for the thread to finish and returns its result",
+            "Kills the thread",
+            "Copies the thread's data into `main`",
+          ],
+          answer: 1,
+          explain:
+            "`spawn` already started the thread. `join` blocks until it is done, and gives `Err` if the thread panicked. It works like `await` for a thread.",
+        },
+        {
+          level: 1,
+          q: "`main` spawns a thread that prints a line, but never calls `join`. What can happen?",
+          options: [
+            "The compiler refuses to build it",
+            "The thread always finishes first",
+            "`main` may end first, and the line is never printed",
+            "The thread runs twice",
+          ],
+          answer: 2,
+          explain:
+            "When `main` returns, the whole process exits and unfinished threads are cut off. Without `join` there is no promise that the work completed.",
+        },
+        {
+          level: 2,
+          q: "Why does this fail to compile?",
+          code: 'let data = vec![1, 2, 3];\nlet handle = thread::spawn(|| {\n    println!("{:?}", data);\n});',
+          options: [
+            "`println!` cannot be used inside a thread",
+            "The closure borrows `data`, but the thread may outlive `main`'s variable",
+            "`data` must be declared with `mut`",
+            "`Vec` cannot be shared at all",
+          ],
+          answer: 1,
+          explain:
+            "This is E0373. A thread may live longer than the function that started it, so it must own its data. Add `move` before the closure.",
+        },
+        {
+          level: 2,
+          q: "After `thread::spawn(move || data.iter().sum::<i32>())`, can `main` still use `data`?",
+          options: [
+            "Yes, `move` only copies it",
+            "Yes, but only for reading",
+            "No, `data` was moved into the closure, so the thread owns it",
+            "Only if `data` is a `Vec<String>`",
+          ],
+          answer: 2,
+          explain:
+            "`move` transfers ownership, the same rule as Round 1. A `Vec` is not `Copy`. Use `.clone()` first if `main` also needs it, or share it with `Arc`.",
+        },
+        {
+          level: 3,
+          q: "Where does the data live in Rust's `Mutex<T>`, compared with a Ruby `Mutex`?",
+          options: [
+            "Outside the mutex, you just remember to lock",
+            "Inside the mutex, so you cannot reach it without locking",
+            "In a global variable",
+            "On the heap of each thread",
+          ],
+          answer: 1,
+          explain:
+            "`Mutex<T>` owns the value. The only way in is `lock()`, so you cannot forget to lock. In Ruby the mutex and the data are separate, and nothing forces you to use it.",
+        },
+        {
+          level: 3,
+          q: "When is the lock released in `{ let mut g = m.lock().unwrap(); *g += 1; }`?",
+          options: [
+            "When the program ends",
+            "When you call `unlock()`",
+            "When the guard `g` is dropped at the end of the block",
+            "Never, you need `join`",
+          ],
+          answer: 2,
+          explain:
+            "There is no `unlock()`. The guard releases the lock when it goes out of scope. Use an inner block or `drop(g)` to release early.",
+        },
+        {
+          level: 4,
+          q: "What does `Arc::clone(&name)` copy?",
+          options: [
+            "The whole `String`",
+            "Only the pointer, and it adds one to the owner count",
+            "Nothing, it moves the value",
+            "The `String` and the counter",
+          ],
+          answer: 1,
+          explain:
+            "`Arc::clone` is cheap: same data, one more owner. The value is freed when the last `Arc` is dropped. Call `Arc::strong_count` to see the number.",
+        },
+        {
+          level: 4,
+          q: "You send an `Rc<i32>` into `thread::spawn`. What happens?",
+          options: [
+            "It works, but slower",
+            "A panic at run time",
+            "A compile error: `Rc<i32>` cannot be sent between threads safely (`Send` is missing)",
+            "It works only with `move`",
+          ],
+          answer: 2,
+          explain:
+            "`Rc` uses a non-atomic counter, which is only safe on one thread. `Arc` uses an atomic counter. Rust catches the mistake at compile time through the `Send` trait.",
+        },
+        {
+          level: 4,
+          q: "You have `let a = Arc::new(5);`. Which line changes the value to 6?",
+          options: [
+            "`*a = 6;`",
+            "`a.set(6);`",
+            "None, an `Arc` alone gives read-only access",
+            "`let mut a` makes `*a = 6;` work",
+          ],
+          answer: 2,
+          explain:
+            "`Arc<T>` only shares. To change the value from several owners, wrap it: `Arc<Mutex<i32>>`.",
+        },
+        {
+          level: 5,
+          q: "Why does this loop fail to compile?",
+          code: "let counter = Mutex::new(0);\nfor _ in 0..2 {\n    thread::spawn(move || {\n        *counter.lock().unwrap() += 1;\n    });\n}",
+          options: [
+            "`lock()` cannot be used in a loop",
+            "The first thread takes `counter`, so the next round has nothing to move (E0382)",
+            "`Mutex::new` needs a `String`",
+            "`thread::spawn` needs `Arc` as a return type",
+          ],
+          answer: 1,
+          explain:
+            "A `move` closure takes ownership, and a `Mutex` has one owner. Wrap it in `Arc`, and `Arc::clone` once per thread inside the loop.",
+        },
+        {
+          level: 5,
+          q: "8 threads each do `*counter.lock().unwrap() += 1000` times on an `Arc<Mutex<i32>>` starting at 0. What is the final value?",
+          options: [
+            "Random, below 8000 because of lost updates",
+            "Always 8000",
+            "Always 1000",
+            "It deadlocks",
+          ],
+          answer: 1,
+          explain:
+            "The lock makes each add atomic with respect to the others, so no update is lost. Without the `Mutex` the program would not even compile.",
+        },
+        {
+          level: 6,
+          q: "Which is the best way to use a shared `Mutex` when part of the work is slow?",
+          options: [
+            "Lock first, then do all the work inside",
+            "Do the slow work first, then lock only for the quick update",
+            "Lock twice to be safe",
+            "Use `Rc` to avoid the lock",
+          ],
+          answer: 1,
+          explain:
+            "Other threads wait while you hold the guard. Keep the locked part as short as possible. But if you check and then change the same value, do both under one guard.",
+        },
+      ];
+
+      function richText(text) {
+        return escapeHtml(text).replace(/`([^`]+)`/g, "<code>$1</code>");
+      }
+
+      function renderQuiz() {
+        const root = document.getElementById("quiz");
+        const scoreText = document.getElementById("score-text");
+        let score = 0;
+        let answered = 0;
+        root.innerHTML = "";
+
+        function updateScore() {
+          scoreText.textContent =
+            "Score: " +
+            score +
+            " / " +
+            QUESTIONS.length +
+            " (answered " +
+            answered +
+            ")";
+        }
+
+        QUESTIONS.forEach((item, index) => {
+          const card = document.createElement("div");
+          card.className = "q";
+
+          const head = document.createElement("p");
+          head.className = "q-head";
+          head.innerHTML =
+            '<span class="level">Level ' +
+            item.level +
+            "</span>" +
+            (index + 1) +
+            ". " +
+            richText(item.q);
+          card.appendChild(head);
+
+          if (item.code) {
+            const pre = document.createElement("pre");
+            const code = document.createElement("code");
+            code.innerHTML = highlight(item.code);
+            pre.appendChild(code);
+            card.appendChild(pre);
+          }
+
+          const list = document.createElement("div");
+          list.className = "opts";
+          const buttons = item.options.map((text, optIndex) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.innerHTML =
+              "<strong>" + "ABCD"[optIndex] + ".</strong> " + richText(text);
+            list.appendChild(btn);
+            return btn;
+          });
+          card.appendChild(list);
+
+          const explain = document.createElement("div");
+          explain.className = "explain";
+          explain.hidden = true;
+          card.appendChild(explain);
+
+          buttons.forEach((btn, optIndex) => {
+            btn.addEventListener("click", () => {
+              buttons.forEach((b) => (b.disabled = true));
+              buttons[item.answer].classList.add("correct");
+              const right = optIndex === item.answer;
+              if (right) {
+                score += 1;
+              } else {
+                btn.classList.add("wrong");
+              }
+              answered += 1;
+              explain.innerHTML =
+                "<strong>" +
+                (right ? "Correct. " : "Not quite. ") +
+                "</strong>" +
+                richText(item.explain);
+              explain.hidden = false;
+              updateScore();
+            });
+          });
+
+          root.appendChild(card);
+        });
+
+        updateScore();
+      }
+
+      document
+        .getElementById("quiz-reset")
+        .addEventListener("click", renderQuiz);
+      renderQuiz();
+    </script>
+  </body>
+</html>
