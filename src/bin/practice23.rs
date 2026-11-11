@@ -28,8 +28,7 @@ fn a() -> JoinHandle<()> {
 fn b() -> JoinHandle<()> {
     let a = Arc::new(1);
     thread::spawn(move || {
-        let b = a.clone();
-        println!("b = {}", b);
+        println!("b = {}", a);
     })
 }
 

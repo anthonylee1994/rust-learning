@@ -25,5 +25,9 @@ fn main() {
         handle.join().unwrap();
     }
 
-    println!("{:?}", map.lock().unwrap());
+    let mut words: Vec<_> = map.lock().unwrap().clone().into_iter().collect();
+    words.sort();
+    for (word, count) in words {
+        println!("{}: {}", word, count);
+    }
 }

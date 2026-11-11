@@ -4,7 +4,7 @@ use std::{
 };
 
 fn main() {
-    let balance = Arc::new(Mutex::new(100));
+    let balance = Arc::new(Mutex::new(100i64));
     let mut handles = Vec::new();
 
     for _ in 0..5 {
@@ -20,10 +20,11 @@ fn main() {
         let balance = balance.clone();
         let handle = thread::spawn(move || {
             let mut balance = balance.lock().unwrap();
-            if *balance < 20 {
+            if *balance >= 20 {
+                *balance -= 20;
+            } else {
                 println!("insufficient funds");
             }
-            *balance -= 20;
         });
         handles.push(handle);
     }
